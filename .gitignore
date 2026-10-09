@@ -1,0 +1,23 @@
+# env & secrets
+.env
+*.env.local
+
+# dependencies
+node_modules/
+vendor/
+
+# build / logs
+dist/
+build/
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# database dumps besar
+*.dump
+*.sql.gz
