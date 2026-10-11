@@ -1,0 +1,7 @@
+{
+  "error": {
+    "kode": "TIDAK_DITEMUKAN",
+    "pesan": "Polsek dengan id 99 tidak ditemukan",
+    "detail": []
+  }
+}

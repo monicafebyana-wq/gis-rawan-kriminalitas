@@ -1,0 +1,57 @@
+{
+  "id_polsek": 15,
+  "nama_polsek": "Kertasari",
+  "tahun": 2024,
+  "total_kasus": 23,
+  "kategori_zona": "rendah",
+  "rincian_jenis": [
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 9
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 6
+    },
+    {
+      "id_jenis": 3,
+      "kode_jenis": "CURAS",
+      "nama_jenis": "Pencurian dengan Kekerasan (Curas)",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 2,
+      "kode_jenis": "ANIAYA_BERAT",
+      "nama_jenis": "Penganiayaan Berat",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 9,
+      "kode_jenis": "RUSAK",
+      "nama_jenis": "Perusakan",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 1
+    }
+  ]
+}

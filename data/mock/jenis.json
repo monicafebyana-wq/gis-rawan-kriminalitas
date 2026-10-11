@@ -1,0 +1,94 @@
+{
+  "data": [
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan"
+    },
+    {
+      "id_jenis": 2,
+      "kode_jenis": "ANIAYA_BERAT",
+      "nama_jenis": "Penganiayaan Berat"
+    },
+    {
+      "id_jenis": 3,
+      "kode_jenis": "CURAS",
+      "nama_jenis": "Pencurian dengan Kekerasan (Curas)"
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)"
+    },
+    {
+      "id_jenis": 5,
+      "kode_jenis": "CURANMOR_R4",
+      "nama_jenis": "Curanmor Roda 4"
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2"
+    },
+    {
+      "id_jenis": 7,
+      "kode_jenis": "PERKOSAAN",
+      "nama_jenis": "Perkosaan"
+    },
+    {
+      "id_jenis": 8,
+      "kode_jenis": "JUDI",
+      "nama_jenis": "Perjudian"
+    },
+    {
+      "id_jenis": 9,
+      "kode_jenis": "RUSAK",
+      "nama_jenis": "Perusakan"
+    },
+    {
+      "id_jenis": 10,
+      "kode_jenis": "TIPU",
+      "nama_jenis": "Penipuan"
+    },
+    {
+      "id_jenis": 11,
+      "kode_jenis": "GELAP",
+      "nama_jenis": "Penggelapan"
+    },
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa"
+    },
+    {
+      "id_jenis": 13,
+      "kode_jenis": "KDRT",
+      "nama_jenis": "KDRT"
+    },
+    {
+      "id_jenis": 14,
+      "kode_jenis": "SAJAM",
+      "nama_jenis": "Senjata Tajam"
+    },
+    {
+      "id_jenis": 15,
+      "kode_jenis": "TDK_SENANG",
+      "nama_jenis": "Perbuatan Tidak Menyenangkan"
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan"
+    },
+    {
+      "id_jenis": 17,
+      "kode_jenis": "CABUL",
+      "nama_jenis": "Pencabulan"
+    },
+    {
+      "id_jenis": 18,
+      "kode_jenis": "LAIN2",
+      "nama_jenis": "Lain-lain"
+    }
+  ]
+}

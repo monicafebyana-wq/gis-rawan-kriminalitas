@@ -1,0 +1,51 @@
+{
+  "id_polsek": 3,
+  "nama_polsek": "Bojong Soang",
+  "tahun": 2024,
+  "total_kasus": 23,
+  "kategori_zona": "rendah",
+  "rincian_jenis": [
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 9
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 7
+    },
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 11,
+      "kode_jenis": "GELAP",
+      "nama_jenis": "Penggelapan",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 10,
+      "kode_jenis": "TIPU",
+      "nama_jenis": "Penipuan",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 18,
+      "kode_jenis": "LAIN2",
+      "nama_jenis": "Lain-lain",
+      "jumlah": 1
+    }
+  ]
+}

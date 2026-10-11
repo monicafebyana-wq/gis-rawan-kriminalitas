@@ -1,0 +1,57 @@
+{
+  "id_polsek": 26,
+  "nama_polsek": "Solokan Jeruk",
+  "tahun": 2024,
+  "total_kasus": 38,
+  "kategori_zona": "sedang",
+  "rincian_jenis": [
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 10
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 9
+    },
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 6
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 10,
+      "kode_jenis": "TIPU",
+      "nama_jenis": "Penipuan",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 14,
+      "kode_jenis": "SAJAM",
+      "nama_jenis": "Senjata Tajam",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 18,
+      "kode_jenis": "LAIN2",
+      "nama_jenis": "Lain-lain",
+      "jumlah": 1
+    }
+  ]
+}

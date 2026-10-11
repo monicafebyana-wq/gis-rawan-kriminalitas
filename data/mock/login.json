@@ -1,0 +1,10 @@
+{
+  "token": "<jwt>",
+  "tipe": "Bearer",
+  "berlaku_detik": 86400,
+  "pengguna": {
+    "id_pengguna": 1,
+    "username": "admin",
+    "peran": "admin"
+  }
+}

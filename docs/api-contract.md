@@ -39,6 +39,8 @@ Berdasarkan **total semua jenis kejahatan** per Polsek pada tahun tsb:
 | 404 | `TIDAK_DITEMUKAN` | ID tidak ada |
 | 409 | `DATA_SUDAH_ADA` | Kombinasi polsek+jenis+tahun sudah ada |
 | 500 | `KESALAHAN_SERVER` | Error tak terduga |
+| 501 | `BELUM_DIIMPLEMENTASI` | Endpoint ada di kontrak tapi belum dikerjakan (selama development) |
+| 503 | `DATABASE_TIDAK_TERSEDIA` | Backend tidak bisa terhubung ke database |
 
 ---
 

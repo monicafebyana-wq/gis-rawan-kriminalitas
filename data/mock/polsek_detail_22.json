@@ -1,0 +1,51 @@
+{
+  "id_polsek": 22,
+  "nama_polsek": "Paseh",
+  "tahun": 2024,
+  "total_kasus": 20,
+  "kategori_zona": "rendah",
+  "rincian_jenis": [
+    {
+      "id_jenis": 2,
+      "kode_jenis": "ANIAYA_BERAT",
+      "nama_jenis": "Penganiayaan Berat",
+      "jumlah": 8
+    },
+    {
+      "id_jenis": 5,
+      "kode_jenis": "CURANMOR_R4",
+      "nama_jenis": "Curanmor Roda 4",
+      "jumlah": 3
+    },
+    {
+      "id_jenis": 10,
+      "kode_jenis": "TIPU",
+      "nama_jenis": "Penipuan",
+      "jumlah": 3
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 1
+    }
+  ]
+}

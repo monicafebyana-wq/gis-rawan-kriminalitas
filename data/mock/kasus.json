@@ -1,0 +1,187 @@
+{
+  "page": 1,
+  "limit": 20,
+  "total_data": 486,
+  "data": [
+    {
+      "id_kasus": 1,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 1,
+      "nama_jenis": "Penganiayaan",
+      "tahun": 2024,
+      "jumlah": 4
+    },
+    {
+      "id_kasus": 2,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 2,
+      "nama_jenis": "Penganiayaan Berat",
+      "tahun": 2024,
+      "jumlah": 5
+    },
+    {
+      "id_kasus": 3,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 3,
+      "nama_jenis": "Pencurian dengan Kekerasan (Curas)",
+      "tahun": 2024,
+      "jumlah": 5
+    },
+    {
+      "id_kasus": 4,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 4,
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "tahun": 2024,
+      "jumlah": 11
+    },
+    {
+      "id_kasus": 5,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 5,
+      "nama_jenis": "Curanmor Roda 4",
+      "tahun": 2024,
+      "jumlah": 0
+    },
+    {
+      "id_kasus": 6,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 6,
+      "nama_jenis": "Curanmor Roda 2",
+      "tahun": 2024,
+      "jumlah": 14
+    },
+    {
+      "id_kasus": 7,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 7,
+      "nama_jenis": "Perkosaan",
+      "tahun": 2024,
+      "jumlah": 0
+    },
+    {
+      "id_kasus": 8,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 8,
+      "nama_jenis": "Perjudian",
+      "tahun": 2024,
+      "jumlah": 1
+    },
+    {
+      "id_kasus": 9,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 9,
+      "nama_jenis": "Perusakan",
+      "tahun": 2024,
+      "jumlah": 0
+    },
+    {
+      "id_kasus": 10,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 10,
+      "nama_jenis": "Penipuan",
+      "tahun": 2024,
+      "jumlah": 1
+    },
+    {
+      "id_kasus": 11,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 11,
+      "nama_jenis": "Penggelapan",
+      "tahun": 2024,
+      "jumlah": 5
+    },
+    {
+      "id_kasus": 12,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 12,
+      "nama_jenis": "Pencurian Biasa",
+      "tahun": 2024,
+      "jumlah": 0
+    },
+    {
+      "id_kasus": 13,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 13,
+      "nama_jenis": "KDRT",
+      "tahun": 2024,
+      "jumlah": 0
+    },
+    {
+      "id_kasus": 14,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 14,
+      "nama_jenis": "Senjata Tajam",
+      "tahun": 2024,
+      "jumlah": 6
+    },
+    {
+      "id_kasus": 15,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 15,
+      "nama_jenis": "Perbuatan Tidak Menyenangkan",
+      "tahun": 2024,
+      "jumlah": 0
+    },
+    {
+      "id_kasus": 16,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 16,
+      "nama_jenis": "Pengeroyokan",
+      "tahun": 2024,
+      "jumlah": 17
+    },
+    {
+      "id_kasus": 17,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 17,
+      "nama_jenis": "Pencabulan",
+      "tahun": 2024,
+      "jumlah": 0
+    },
+    {
+      "id_kasus": 18,
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "id_jenis": 18,
+      "nama_jenis": "Lain-lain",
+      "tahun": 2024,
+      "jumlah": 5
+    },
+    {
+      "id_kasus": 19,
+      "id_polsek": 2,
+      "nama_polsek": "Banjaran",
+      "id_jenis": 1,
+      "nama_jenis": "Penganiayaan",
+      "tahun": 2024,
+      "jumlah": 16
+    },
+    {
+      "id_kasus": 20,
+      "id_polsek": 2,
+      "nama_polsek": "Banjaran",
+      "id_jenis": 2,
+      "nama_jenis": "Penganiayaan Berat",
+      "tahun": 2024,
+      "jumlah": 0
+    }
+  ]
+}

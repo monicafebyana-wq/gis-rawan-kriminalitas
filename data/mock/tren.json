@@ -1,0 +1,9 @@
+{
+  "catatan": "Baru ada data 2024, jadi tren hanya 1 titik. Struktur siap untuk multi-tahun.",
+  "data": [
+    {
+      "tahun": 2024,
+      "total_kasus": 1163
+    }
+  ]
+}

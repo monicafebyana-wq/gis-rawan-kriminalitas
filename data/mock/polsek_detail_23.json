@@ -1,0 +1,33 @@
+{
+  "id_polsek": 23,
+  "nama_polsek": "Pasir Jambu",
+  "tahun": 2024,
+  "total_kasus": 9,
+  "kategori_zona": "rendah",
+  "rincian_jenis": [
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 3
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 9,
+      "kode_jenis": "RUSAK",
+      "nama_jenis": "Perusakan",
+      "jumlah": 1
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "id_polsek": 25,
+  "nama_polsek": "Rancaekek",
+  "tahun": 2024,
+  "total_kasus": 59,
+  "kategori_zona": "sedang",
+  "rincian_jenis": [
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 17
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 10
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 10
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 5
+    },
+    {
+      "id_jenis": 10,
+      "kode_jenis": "TIPU",
+      "nama_jenis": "Penipuan",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 11,
+      "kode_jenis": "GELAP",
+      "nama_jenis": "Penggelapan",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 3,
+      "kode_jenis": "CURAS",
+      "nama_jenis": "Pencurian dengan Kekerasan (Curas)",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 18,
+      "kode_jenis": "LAIN2",
+      "nama_jenis": "Lain-lain",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 9,
+      "kode_jenis": "RUSAK",
+      "nama_jenis": "Perusakan",
+      "jumlah": 1
+    }
+  ]
+}

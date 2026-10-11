@@ -1,0 +1,33 @@
+{
+  "id_polsek": 21,
+  "nama_polsek": "Pangalengan",
+  "tahun": 2024,
+  "total_kasus": 16,
+  "kategori_zona": "rendah",
+  "rincian_jenis": [
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 10
+    },
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 1
+    }
+  ]
+}

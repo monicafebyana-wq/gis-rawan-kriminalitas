@@ -1,0 +1,19 @@
+id_jenis,kode_jenis,nama_jenis,kolom_csv_asli
+1,ANIAYA,Penganiayaan,Aniaya
+2,ANIAYA_BERAT,Penganiayaan Berat,Aniaya Berat
+3,CURAS,Pencurian dengan Kekerasan (Curas),Curas
+4,CURAT,Pencurian dengan Pemberatan (Curat),Curat
+5,CURANMOR_R4,Curanmor Roda 4,Curanmor R4
+6,CURANMOR_R2,Curanmor Roda 2,Curanmor R2
+7,PERKOSAAN,Perkosaan,Perkosaan
+8,JUDI,Perjudian,Judi
+9,RUSAK,Perusakan,Rusak
+10,TIPU,Penipuan,Tipu
+11,GELAP,Penggelapan,Gelap
+12,CURI_BIASA,Pencurian Biasa,Curi Biasa
+13,KDRT,KDRT,KDRT
+14,SAJAM,Senjata Tajam,Sajam
+15,TDK_SENANG,Perbuatan Tidak Menyenangkan,Tdk Senang
+16,KEROYOK,Pengeroyokan,Keroyok
+17,CABUL,Pencabulan,Cabul
+18,LAIN2,Lain-lain,Lain2

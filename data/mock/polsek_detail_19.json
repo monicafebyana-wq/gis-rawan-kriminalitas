@@ -1,0 +1,21 @@
+{
+  "id_polsek": 19,
+  "nama_polsek": "Nagreg",
+  "tahun": 2024,
+  "total_kasus": 5,
+  "kategori_zona": "rendah",
+  "rincian_jenis": [
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 3
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 2
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "error": {
+    "kode": "VALIDASI_GAGAL",
+    "pesan": "Parameter tahun harus berupa angka",
+    "detail": [
+      "tahun"
+    ]
+  }
+}

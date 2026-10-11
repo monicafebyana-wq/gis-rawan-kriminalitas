@@ -1,0 +1,8 @@
+{
+  "name": "mock-server-gis-kriminalitas",
+  "version": "1.0.0",
+  "description": "Server tiruan API (sesuai docs/api-contract.md) untuk development front end. Tanpa dependensi.",
+  "scripts": { "start": "node server.js" },
+  "license": "UNLICENSED",
+  "private": true
+}

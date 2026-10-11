@@ -1,0 +1,41 @@
+"""Titik masuk aplikasi.  Jalankan dari folder backend/:
+    uvicorn app.main:app --reload --port 3000
+Dokumentasi interaktif otomatis: http://localhost:3000/docs
+"""
+from contextlib import asynccontextmanager
+
+from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app import __version__, db
+from app.config import settings
+from app.errors import daftar_handler
+from app.routers import auth, health, kasus, laporan, polsek, referensi, statistik
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    db.buka_pool()
+    yield
+    db.tutup_pool()
+
+
+app = FastAPI(
+    title="API Web GIS Rawan Kriminalitas",
+    description="Implementasi docs/api-contract.md",
+    version=__version__,
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+daftar_handler(app)
+
+api = APIRouter(prefix="/api")
+for r in (health.router, referensi.router, polsek.router, kasus.router, statistik.router, auth.router, laporan.router):
+    api.include_router(r)
+app.include_router(api)

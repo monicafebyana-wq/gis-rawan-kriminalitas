@@ -1,0 +1,7 @@
+{
+  "error": {
+    "kode": "TIDAK_TERAUTENTIKASI",
+    "pesan": "Username atau password salah",
+    "detail": []
+  }
+}

@@ -1,0 +1,322 @@
+{
+  "tahun": 2024,
+  "total_kasus": 1163,
+  "jumlah_polsek": 27,
+  "jumlah_jenis": 18,
+  "polsek_tertinggi": {
+    "id_polsek": 5,
+    "nama_polsek": "Cicalengka",
+    "total_kasus": 76
+  },
+  "polsek_terendah": {
+    "id_polsek": 19,
+    "nama_polsek": "Nagreg",
+    "total_kasus": 5
+  },
+  "distribusi_zona": {
+    "tinggi": 10,
+    "sedang": 7,
+    "rendah": 10
+  },
+  "top_jenis": [
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 235
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 198
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 154
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 151
+    }
+  ],
+  "persen_top_jenis": 63.5,
+  "per_polsek": [
+    {
+      "id_polsek": 5,
+      "nama_polsek": "Cicalengka",
+      "total_kasus": 76,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 27,
+      "nama_polsek": "Soreang",
+      "total_kasus": 75,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 1,
+      "nama_polsek": "Bale Endah",
+      "total_kasus": 74,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 4,
+      "nama_polsek": "Cangkuang",
+      "total_kasus": 69,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 20,
+      "nama_polsek": "Pacet",
+      "total_kasus": 66,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 2,
+      "nama_polsek": "Banjaran",
+      "total_kasus": 65,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 7,
+      "nama_polsek": "Cileunyi",
+      "total_kasus": 64,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 17,
+      "nama_polsek": "Margaasih",
+      "total_kasus": 64,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 10,
+      "nama_polsek": "Ciparay",
+      "total_kasus": 63,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 14,
+      "nama_polsek": "Katapang",
+      "total_kasus": 61,
+      "kategori_zona": "tinggi"
+    },
+    {
+      "id_polsek": 25,
+      "nama_polsek": "Rancaekek",
+      "total_kasus": 59,
+      "kategori_zona": "sedang"
+    },
+    {
+      "id_polsek": 16,
+      "nama_polsek": "Majalaya",
+      "total_kasus": 52,
+      "kategori_zona": "sedang"
+    },
+    {
+      "id_polsek": 24,
+      "nama_polsek": "Pameungpeuk",
+      "total_kasus": 48,
+      "kategori_zona": "sedang"
+    },
+    {
+      "id_polsek": 12,
+      "nama_polsek": "Dayeuh Kolot",
+      "total_kasus": 42,
+      "kategori_zona": "sedang"
+    },
+    {
+      "id_polsek": 26,
+      "nama_polsek": "Solokan Jeruk",
+      "total_kasus": 38,
+      "kategori_zona": "sedang"
+    },
+    {
+      "id_polsek": 6,
+      "nama_polsek": "Cikancung",
+      "total_kasus": 34,
+      "kategori_zona": "sedang"
+    },
+    {
+      "id_polsek": 11,
+      "nama_polsek": "Ciwidey",
+      "total_kasus": 31,
+      "kategori_zona": "sedang"
+    },
+    {
+      "id_polsek": 9,
+      "nama_polsek": "Cimenyan",
+      "total_kasus": 26,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 18,
+      "nama_polsek": "Margahayu",
+      "total_kasus": 26,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 15,
+      "nama_polsek": "Kertasari",
+      "total_kasus": 23,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 3,
+      "nama_polsek": "Bojong Soang",
+      "total_kasus": 23,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 22,
+      "nama_polsek": "Paseh",
+      "total_kasus": 20,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 8,
+      "nama_polsek": "Cimaung",
+      "total_kasus": 17,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 13,
+      "nama_polsek": "Ibun",
+      "total_kasus": 17,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 21,
+      "nama_polsek": "Pangalengan",
+      "total_kasus": 16,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 23,
+      "nama_polsek": "Pasir Jambu",
+      "total_kasus": 9,
+      "kategori_zona": "rendah"
+    },
+    {
+      "id_polsek": 19,
+      "nama_polsek": "Nagreg",
+      "total_kasus": 5,
+      "kategori_zona": "rendah"
+    }
+  ],
+  "per_jenis": [
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 235
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 198
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 154
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 151
+    },
+    {
+      "id_jenis": 10,
+      "kode_jenis": "TIPU",
+      "nama_jenis": "Penipuan",
+      "jumlah": 91
+    },
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 82
+    },
+    {
+      "id_jenis": 11,
+      "kode_jenis": "GELAP",
+      "nama_jenis": "Penggelapan",
+      "jumlah": 58
+    },
+    {
+      "id_jenis": 18,
+      "kode_jenis": "LAIN2",
+      "nama_jenis": "Lain-lain",
+      "jumlah": 51
+    },
+    {
+      "id_jenis": 2,
+      "kode_jenis": "ANIAYA_BERAT",
+      "nama_jenis": "Penganiayaan Berat",
+      "jumlah": 39
+    },
+    {
+      "id_jenis": 3,
+      "kode_jenis": "CURAS",
+      "nama_jenis": "Pencurian dengan Kekerasan (Curas)",
+      "jumlah": 37
+    },
+    {
+      "id_jenis": 14,
+      "kode_jenis": "SAJAM",
+      "nama_jenis": "Senjata Tajam",
+      "jumlah": 30
+    },
+    {
+      "id_jenis": 5,
+      "kode_jenis": "CURANMOR_R4",
+      "nama_jenis": "Curanmor Roda 4",
+      "jumlah": 12
+    },
+    {
+      "id_jenis": 9,
+      "kode_jenis": "RUSAK",
+      "nama_jenis": "Perusakan",
+      "jumlah": 10
+    },
+    {
+      "id_jenis": 13,
+      "kode_jenis": "KDRT",
+      "nama_jenis": "KDRT",
+      "jumlah": 8
+    },
+    {
+      "id_jenis": 15,
+      "kode_jenis": "TDK_SENANG",
+      "nama_jenis": "Perbuatan Tidak Menyenangkan",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 8,
+      "kode_jenis": "JUDI",
+      "nama_jenis": "Perjudian",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 17,
+      "kode_jenis": "CABUL",
+      "nama_jenis": "Pencabulan",
+      "jumlah": 1
+    },
+    {
+      "id_jenis": 7,
+      "kode_jenis": "PERKOSAAN",
+      "nama_jenis": "Perkosaan",
+      "jumlah": 0
+    }
+  ]
+}

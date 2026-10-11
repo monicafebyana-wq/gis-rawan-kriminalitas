@@ -1,0 +1,87 @@
+{
+  "id_polsek": 5,
+  "nama_polsek": "Cicalengka",
+  "tahun": 2024,
+  "total_kasus": 76,
+  "kategori_zona": "tinggi",
+  "rincian_jenis": [
+    {
+      "id_jenis": 1,
+      "kode_jenis": "ANIAYA",
+      "nama_jenis": "Penganiayaan",
+      "jumlah": 20
+    },
+    {
+      "id_jenis": 10,
+      "kode_jenis": "TIPU",
+      "nama_jenis": "Penipuan",
+      "jumlah": 12
+    },
+    {
+      "id_jenis": 16,
+      "kode_jenis": "KEROYOK",
+      "nama_jenis": "Pengeroyokan",
+      "jumlah": 9
+    },
+    {
+      "id_jenis": 4,
+      "kode_jenis": "CURAT",
+      "nama_jenis": "Pencurian dengan Pemberatan (Curat)",
+      "jumlah": 6
+    },
+    {
+      "id_jenis": 12,
+      "kode_jenis": "CURI_BIASA",
+      "nama_jenis": "Pencurian Biasa",
+      "jumlah": 6
+    },
+    {
+      "id_jenis": 18,
+      "kode_jenis": "LAIN2",
+      "nama_jenis": "Lain-lain",
+      "jumlah": 6
+    },
+    {
+      "id_jenis": 6,
+      "kode_jenis": "CURANMOR_R2",
+      "nama_jenis": "Curanmor Roda 2",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 14,
+      "kode_jenis": "SAJAM",
+      "nama_jenis": "Senjata Tajam",
+      "jumlah": 4
+    },
+    {
+      "id_jenis": 2,
+      "kode_jenis": "ANIAYA_BERAT",
+      "nama_jenis": "Penganiayaan Berat",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 5,
+      "kode_jenis": "CURANMOR_R4",
+      "nama_jenis": "Curanmor Roda 4",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 11,
+      "kode_jenis": "GELAP",
+      "nama_jenis": "Penggelapan",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 13,
+      "kode_jenis": "KDRT",
+      "nama_jenis": "KDRT",
+      "jumlah": 2
+    },
+    {
+      "id_jenis": 3,
+      "kode_jenis": "CURAS",
+      "nama_jenis": "Pencurian dengan Kekerasan (Curas)",
+      "jumlah": 1
+    }
+  ]
+}

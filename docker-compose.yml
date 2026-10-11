@@ -1,0 +1,28 @@
+# Database lokal: PostgreSQL + PostGIS
+# Jalankan:  docker compose up -d      Hentikan:  docker compose down
+# Nilai diambil dari file .env (lihat .env.example); kalau kosong pakai default di bawah.
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: gis_kriminalitas_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-gis_kriminalitas}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro   # skrip .sql di sini jalan otomatis SEKALI (saat volume masih kosong)
+      - ./backend/db/migrations:/migrations:ro     # file migrasi skema (dijalankan manual lewat run.sh)
+      - ./backend/db/seed:/seed:ro                 # skrip impor data (import.sh)
+      - ./data/bersih:/data/bersih:ro              # CSV bersih yang diimpor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gis_kriminalitas}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

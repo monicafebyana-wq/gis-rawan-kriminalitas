@@ -3,7 +3,7 @@
 # Syarat: sudah install Git + GitHub CLI (gh) dan sudah `gh auth login` sebagai Monica.
 set -e
 REPO="gis-rawan-kriminalitas"
-PARTNER="${1:?Usage: ./setup-repo.sh dheaawrdhani}"
+PARTNER="${1:?Usage: ./setup-repo.sh <username-github-dhea>}"
 
 gh auth status
 OWNER=$(gh api user -q .login)

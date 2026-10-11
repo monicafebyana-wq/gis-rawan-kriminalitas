@@ -1,0 +1,1140 @@
+{
+  "type": "FeatureCollection",
+  "catatan": "Contoh /api/polsek?tahun=2024&jenis=1,16 (geometri dummy)",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.4,
+              -7.3
+            ],
+            [
+              107.46000000000001,
+              -7.3
+            ],
+            [
+              107.46000000000001,
+              -7.24
+            ],
+            [
+              107.4,
+              -7.24
+            ],
+            [
+              107.4,
+              -7.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 1,
+        "nama_polsek": "Bale Endah",
+        "tahun": 2024,
+        "total_kasus": 21,
+        "total_semua_jenis": 74,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.27,
+          "lng": 107.43
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.47,
+              -7.3
+            ],
+            [
+              107.53,
+              -7.3
+            ],
+            [
+              107.53,
+              -7.24
+            ],
+            [
+              107.47,
+              -7.24
+            ],
+            [
+              107.47,
+              -7.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 2,
+        "nama_polsek": "Banjaran",
+        "tahun": 2024,
+        "total_kasus": 41,
+        "total_semua_jenis": 65,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.27,
+          "lng": 107.5
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.54,
+              -7.3
+            ],
+            [
+              107.60000000000001,
+              -7.3
+            ],
+            [
+              107.60000000000001,
+              -7.24
+            ],
+            [
+              107.54,
+              -7.24
+            ],
+            [
+              107.54,
+              -7.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 3,
+        "nama_polsek": "Bojong Soang",
+        "tahun": 2024,
+        "total_kasus": 3,
+        "total_semua_jenis": 23,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.27,
+          "lng": 107.57
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.61,
+              -7.3
+            ],
+            [
+              107.67,
+              -7.3
+            ],
+            [
+              107.67,
+              -7.24
+            ],
+            [
+              107.61,
+              -7.24
+            ],
+            [
+              107.61,
+              -7.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 4,
+        "nama_polsek": "Cangkuang",
+        "tahun": 2024,
+        "total_kasus": 29,
+        "total_semua_jenis": 69,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.27,
+          "lng": 107.64
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.68,
+              -7.3
+            ],
+            [
+              107.74000000000001,
+              -7.3
+            ],
+            [
+              107.74000000000001,
+              -7.24
+            ],
+            [
+              107.68,
+              -7.24
+            ],
+            [
+              107.68,
+              -7.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 5,
+        "nama_polsek": "Cicalengka",
+        "tahun": 2024,
+        "total_kasus": 29,
+        "total_semua_jenis": 76,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.27,
+          "lng": 107.71
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.75,
+              -7.3
+            ],
+            [
+              107.81,
+              -7.3
+            ],
+            [
+              107.81,
+              -7.24
+            ],
+            [
+              107.75,
+              -7.24
+            ],
+            [
+              107.75,
+              -7.3
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 6,
+        "nama_polsek": "Cikancung",
+        "tahun": 2024,
+        "total_kasus": 14,
+        "total_semua_jenis": 34,
+        "kategori_zona": "sedang",
+        "pusat": {
+          "lat": -7.27,
+          "lng": 107.78
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.4,
+              -7.2299999999999995
+            ],
+            [
+              107.46000000000001,
+              -7.2299999999999995
+            ],
+            [
+              107.46000000000001,
+              -7.17
+            ],
+            [
+              107.4,
+              -7.17
+            ],
+            [
+              107.4,
+              -7.2299999999999995
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 7,
+        "nama_polsek": "Cileunyi",
+        "tahun": 2024,
+        "total_kasus": 18,
+        "total_semua_jenis": 64,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.2,
+          "lng": 107.43
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.47,
+              -7.2299999999999995
+            ],
+            [
+              107.53,
+              -7.2299999999999995
+            ],
+            [
+              107.53,
+              -7.17
+            ],
+            [
+              107.47,
+              -7.17
+            ],
+            [
+              107.47,
+              -7.2299999999999995
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 8,
+        "nama_polsek": "Cimaung",
+        "tahun": 2024,
+        "total_kasus": 6,
+        "total_semua_jenis": 17,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.2,
+          "lng": 107.5
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.54,
+              -7.2299999999999995
+            ],
+            [
+              107.60000000000001,
+              -7.2299999999999995
+            ],
+            [
+              107.60000000000001,
+              -7.17
+            ],
+            [
+              107.54,
+              -7.17
+            ],
+            [
+              107.54,
+              -7.2299999999999995
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 9,
+        "nama_polsek": "Cimenyan",
+        "tahun": 2024,
+        "total_kasus": 7,
+        "total_semua_jenis": 26,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.2,
+          "lng": 107.57
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.61,
+              -7.2299999999999995
+            ],
+            [
+              107.67,
+              -7.2299999999999995
+            ],
+            [
+              107.67,
+              -7.17
+            ],
+            [
+              107.61,
+              -7.17
+            ],
+            [
+              107.61,
+              -7.2299999999999995
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 10,
+        "nama_polsek": "Ciparay",
+        "tahun": 2024,
+        "total_kasus": 22,
+        "total_semua_jenis": 63,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.2,
+          "lng": 107.64
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.68,
+              -7.2299999999999995
+            ],
+            [
+              107.74000000000001,
+              -7.2299999999999995
+            ],
+            [
+              107.74000000000001,
+              -7.17
+            ],
+            [
+              107.68,
+              -7.17
+            ],
+            [
+              107.68,
+              -7.2299999999999995
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 11,
+        "nama_polsek": "Ciwidey",
+        "tahun": 2024,
+        "total_kasus": 4,
+        "total_semua_jenis": 31,
+        "kategori_zona": "sedang",
+        "pusat": {
+          "lat": -7.2,
+          "lng": 107.71
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.75,
+              -7.2299999999999995
+            ],
+            [
+              107.81,
+              -7.2299999999999995
+            ],
+            [
+              107.81,
+              -7.17
+            ],
+            [
+              107.75,
+              -7.17
+            ],
+            [
+              107.75,
+              -7.2299999999999995
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 12,
+        "nama_polsek": "Dayeuh Kolot",
+        "tahun": 2024,
+        "total_kasus": 4,
+        "total_semua_jenis": 42,
+        "kategori_zona": "sedang",
+        "pusat": {
+          "lat": -7.2,
+          "lng": 107.78
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.4,
+              -7.16
+            ],
+            [
+              107.46000000000001,
+              -7.16
+            ],
+            [
+              107.46000000000001,
+              -7.1000000000000005
+            ],
+            [
+              107.4,
+              -7.1000000000000005
+            ],
+            [
+              107.4,
+              -7.16
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 13,
+        "nama_polsek": "Ibun",
+        "tahun": 2024,
+        "total_kasus": 9,
+        "total_semua_jenis": 17,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.13,
+          "lng": 107.43
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.47,
+              -7.16
+            ],
+            [
+              107.53,
+              -7.16
+            ],
+            [
+              107.53,
+              -7.1000000000000005
+            ],
+            [
+              107.47,
+              -7.1000000000000005
+            ],
+            [
+              107.47,
+              -7.16
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 14,
+        "nama_polsek": "Katapang",
+        "tahun": 2024,
+        "total_kasus": 26,
+        "total_semua_jenis": 61,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.13,
+          "lng": 107.5
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.54,
+              -7.16
+            ],
+            [
+              107.60000000000001,
+              -7.16
+            ],
+            [
+              107.60000000000001,
+              -7.1000000000000005
+            ],
+            [
+              107.54,
+              -7.1000000000000005
+            ],
+            [
+              107.54,
+              -7.16
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 15,
+        "nama_polsek": "Kertasari",
+        "tahun": 2024,
+        "total_kasus": 15,
+        "total_semua_jenis": 23,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.13,
+          "lng": 107.57
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.61,
+              -7.16
+            ],
+            [
+              107.67,
+              -7.16
+            ],
+            [
+              107.67,
+              -7.1000000000000005
+            ],
+            [
+              107.61,
+              -7.1000000000000005
+            ],
+            [
+              107.61,
+              -7.16
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 16,
+        "nama_polsek": "Majalaya",
+        "tahun": 2024,
+        "total_kasus": 26,
+        "total_semua_jenis": 52,
+        "kategori_zona": "sedang",
+        "pusat": {
+          "lat": -7.13,
+          "lng": 107.64
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.68,
+              -7.16
+            ],
+            [
+              107.74000000000001,
+              -7.16
+            ],
+            [
+              107.74000000000001,
+              -7.1000000000000005
+            ],
+            [
+              107.68,
+              -7.1000000000000005
+            ],
+            [
+              107.68,
+              -7.16
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 17,
+        "nama_polsek": "Margaasih",
+        "tahun": 2024,
+        "total_kasus": 8,
+        "total_semua_jenis": 64,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.13,
+          "lng": 107.71
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.75,
+              -7.16
+            ],
+            [
+              107.81,
+              -7.16
+            ],
+            [
+              107.81,
+              -7.1000000000000005
+            ],
+            [
+              107.75,
+              -7.1000000000000005
+            ],
+            [
+              107.75,
+              -7.16
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 18,
+        "nama_polsek": "Margahayu",
+        "tahun": 2024,
+        "total_kasus": 13,
+        "total_semua_jenis": 26,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.13,
+          "lng": 107.78
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.4,
+              -7.09
+            ],
+            [
+              107.46000000000001,
+              -7.09
+            ],
+            [
+              107.46000000000001,
+              -7.03
+            ],
+            [
+              107.4,
+              -7.03
+            ],
+            [
+              107.4,
+              -7.09
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 19,
+        "nama_polsek": "Nagreg",
+        "tahun": 2024,
+        "total_kasus": 0,
+        "total_semua_jenis": 5,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.06,
+          "lng": 107.43
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.47,
+              -7.09
+            ],
+            [
+              107.53,
+              -7.09
+            ],
+            [
+              107.53,
+              -7.03
+            ],
+            [
+              107.47,
+              -7.03
+            ],
+            [
+              107.47,
+              -7.09
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 20,
+        "nama_polsek": "Pacet",
+        "tahun": 2024,
+        "total_kasus": 29,
+        "total_semua_jenis": 66,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -7.06,
+          "lng": 107.5
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.54,
+              -7.09
+            ],
+            [
+              107.60000000000001,
+              -7.09
+            ],
+            [
+              107.60000000000001,
+              -7.03
+            ],
+            [
+              107.54,
+              -7.03
+            ],
+            [
+              107.54,
+              -7.09
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 21,
+        "nama_polsek": "Pangalengan",
+        "tahun": 2024,
+        "total_kasus": 5,
+        "total_semua_jenis": 16,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.06,
+          "lng": 107.57
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.61,
+              -7.09
+            ],
+            [
+              107.67,
+              -7.09
+            ],
+            [
+              107.67,
+              -7.03
+            ],
+            [
+              107.61,
+              -7.03
+            ],
+            [
+              107.61,
+              -7.09
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 22,
+        "nama_polsek": "Paseh",
+        "tahun": 2024,
+        "total_kasus": 2,
+        "total_semua_jenis": 20,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.06,
+          "lng": 107.64
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.68,
+              -7.09
+            ],
+            [
+              107.74000000000001,
+              -7.09
+            ],
+            [
+              107.74000000000001,
+              -7.03
+            ],
+            [
+              107.68,
+              -7.03
+            ],
+            [
+              107.68,
+              -7.09
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 23,
+        "nama_polsek": "Pasir Jambu",
+        "tahun": 2024,
+        "total_kasus": 7,
+        "total_semua_jenis": 9,
+        "kategori_zona": "rendah",
+        "pusat": {
+          "lat": -7.06,
+          "lng": 107.71
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.75,
+              -7.09
+            ],
+            [
+              107.81,
+              -7.09
+            ],
+            [
+              107.81,
+              -7.03
+            ],
+            [
+              107.75,
+              -7.03
+            ],
+            [
+              107.75,
+              -7.09
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 24,
+        "nama_polsek": "Pameungpeuk",
+        "tahun": 2024,
+        "total_kasus": 17,
+        "total_semua_jenis": 48,
+        "kategori_zona": "sedang",
+        "pusat": {
+          "lat": -7.06,
+          "lng": 107.78
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.4,
+              -7.02
+            ],
+            [
+              107.46000000000001,
+              -7.02
+            ],
+            [
+              107.46000000000001,
+              -6.96
+            ],
+            [
+              107.4,
+              -6.96
+            ],
+            [
+              107.4,
+              -7.02
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 25,
+        "nama_polsek": "Rancaekek",
+        "tahun": 2024,
+        "total_kasus": 27,
+        "total_semua_jenis": 59,
+        "kategori_zona": "sedang",
+        "pusat": {
+          "lat": -6.99,
+          "lng": 107.43
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.47,
+              -7.02
+            ],
+            [
+              107.53,
+              -7.02
+            ],
+            [
+              107.53,
+              -6.96
+            ],
+            [
+              107.47,
+              -6.96
+            ],
+            [
+              107.47,
+              -7.02
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 26,
+        "nama_polsek": "Solokan Jeruk",
+        "tahun": 2024,
+        "total_kasus": 14,
+        "total_semua_jenis": 38,
+        "kategori_zona": "sedang",
+        "pusat": {
+          "lat": -6.99,
+          "lng": 107.5
+        }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              107.54,
+              -7.02
+            ],
+            [
+              107.60000000000001,
+              -7.02
+            ],
+            [
+              107.60000000000001,
+              -6.96
+            ],
+            [
+              107.54,
+              -6.96
+            ],
+            [
+              107.54,
+              -7.02
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "id_polsek": 27,
+        "nama_polsek": "Soreang",
+        "tahun": 2024,
+        "total_kasus": 37,
+        "total_semua_jenis": 75,
+        "kategori_zona": "tinggi",
+        "pusat": {
+          "lat": -6.99,
+          "lng": 107.57
+        }
+      }
+    }
+  ]
+}
