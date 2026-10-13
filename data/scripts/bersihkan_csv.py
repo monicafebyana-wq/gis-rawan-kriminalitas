@@ -33,7 +33,7 @@ KOREKSI_NAMA = {"Pemeugpeuk": "Pameungpeuk"}
 # VERIFIKASI dengan atribut data BIG/OSM yang dipakai; ubah di sini bila berbeda.
 NAMA_RESMI = {
     "Bale Endah": "Baleendah", "Bojong Soang": "Bojongsoang", "Dayeuh Kolot": "Dayeuhkolot",
-    "Pasir Jambu": "Pasirjambu", "Solokan Jeruk": "Solokanjeruk",
+    "Pasir Jambu": "Pasirjambu",
 }
 
 def nama_polsek(s):

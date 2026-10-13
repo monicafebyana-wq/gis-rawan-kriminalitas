@@ -15,7 +15,7 @@ Akun uji: `admin` / `admin123` (peran admin) · `operator` / `operator123` (pera
 Token dikirim sebagai `Authorization: Bearer <token>` (token dari respons login).
 Perubahan lewat POST/PUT/DELETE tersimpan di memori saja dan hilang saat server restart (atau panggil `POST /api/_reset`).
 
-Pakai poligon asli: taruh file di `data/geojson/polsek.geojson` (FeatureCollection; tiap feature wajib punya `properties.id_polsek` 1–27, lihat `data/bersih/polsek.csv`), lalu restart server.
+Pakai poligon asli: taruh file di `data/geojson/` dengan nama `polsek.geojson` atau `polsek_poligon.geojson` (FeatureCollection; tiap feature wajib punya `properties.id_polsek` 1–27, lihat `data/bersih/polsek.csv`), lalu restart server.
 
 ### 2. File JSON statis (tanpa Node)
 Buka halaman lewat server statis (mis. ekstensi **Live Server** di VS Code); `fetch()` ke file:// tidak jalan di browser. Pemetaan endpoint → file:

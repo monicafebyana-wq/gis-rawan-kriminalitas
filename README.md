@@ -147,6 +147,31 @@ Hasil yang benar: tabel verifikasi berisi 6 baris berstatus `LULUS` dan di akhir
 - Kalau data memang berubah (mis. tahun baru dengan total berbeda): `sh /seed/import.sh <total_baru>`.
 - Cek manual: `docker exec -it gis_kriminalitas_db psql -U postgres -d gis_kriminalitas -c "SELECT sum(jumlah) FROM kasus_kejahatan"` → `1163`.
 
+## Impor Poligon Wilayah (PostGIS)
+
+Memasukkan poligon dari `data/geojson/polsek_poligon.geojson` ke kolom `polsek.geom`, dengan **validasi geometri** otomatis. Jalankan setelah *Impor Data* (tabel `polsek` harus sudah terisi):
+
+```
+docker compose up -d                                       # pasang mount data/geojson (sekali setelah update repo)
+docker exec gis_kriminalitas_db sh /seed/import_poligon.sh
+```
+Hasil yang benar: 12 pengecekan berstatus `LULUS`, lalu `Verifikasi LULUS, poligon tersimpan`, dan uji spasial di bawahnya menampilkan `Soreang`.
+
+| Yang dicek | Menangkap masalah |
+|---|---|
+| 27 feature, `id_polsek` unik, semua ada di tabel `polsek` | feature hilang / id asing |
+| Nama di GeoJSON = nama di database | id tertukar antar Polsek |
+| Bukan kosong, tipe Polygon/MultiPolygon, **valid** (setelah `ST_MakeValid`), SRID 4326 | geometri rusak / self-intersection |
+| Di dalam kotak Kab. Bandung (lon 107.2–108.2, lat -7.6 s/d -6.6) | lon/lat tertukar, koordinat UTM |
+| Luas tiap wilayah 1–600 km² | poligon degenerate / salah satuan |
+| Tidak ada pasangan wilayah tumpang tindih > 0,05 km² | poligon ganda / salah gambar |
+
+- Satu transaksi: kalau ada yang `GAGAL`, **tidak ada yang berubah** (rollback) dan pesannya menunjuk masalahnya.
+- Geometri tidak valid diperbaiki otomatis lalu dilaporkan di bagian `Info` — cek bentuknya di peta setelah itu.
+- Berkas lain: `sh /seed/import_poligon.sh nama_berkas.geojson` (harus ada di `data/geojson/`).
+- Format GeoJSON: tiap feature wajib punya `properties.id_polsek` (1–27) dan `properties.nama_polsek` yang sama dengan `data/bersih/polsek.csv`.
+- Catatan data saat ini: 27 poligon bentuknya sederhana (7–37 titik per wilayah, cukup untuk peta zonasi). Ada satu "lubang" di tengah wilayah (kemungkinan kecamatan tanpa Polsek di data kita) dan Cimenyan terpisah dari yang lain — keduanya wajar.
+
 ## Mock Server (untuk Front End)
 
 Front end bisa jalan **tanpa backend** memakai server tiruan yang mengikuti `docs/api-contract.md`:

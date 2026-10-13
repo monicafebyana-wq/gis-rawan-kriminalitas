@@ -5,7 +5,7 @@
  *   cd mock-server && node server.js        (atau: npm start)
  *   PORT=3001 node server.js                (ganti port)
  *
- * Geometri poligon: pakai data/geojson/polsek.geojson kalau ada (hasil kerja data spasial),
+ * Geometri poligon: pakai data/geojson/polsek.geojson atau polsek_poligon.geojson kalau ada (hasil kerja data spasial),
  * kalau tidak ada -> kotak DUMMY dari data/mock/polsek.json.
  * Data kasus disimpan di memori: POST/PUT/DELETE berfungsi, tapi kembali ke awal saat server di-restart.
  * Login: admin / admin123 (peran admin), operator / operator123 (peran operator).
@@ -31,9 +31,9 @@ let kasus = kasusAwal.map(k => ({ ...k }));
 let nextId = Math.max(...kasus.map(k => k.id_kasus)) + 1;
 
 function loadGeometry() {
-  const real = path.join(ROOT, 'data', 'geojson', 'polsek.geojson');
   const dummy = path.join(ROOT, 'data', 'mock', 'polsek.json');
-  const src = fs.existsSync(real) ? real : dummy;
+  const kandidat = ['polsek.geojson', 'polsek_poligon.geojson'].map(n => path.join(ROOT, 'data', 'geojson', n));
+  const src = kandidat.find(p => fs.existsSync(p)) || dummy;
   const fc = JSON.parse(fs.readFileSync(src, 'utf8'));
   const map = {};
   fc.features.forEach(f => { map[f.properties.id_polsek] = f.geometry; });

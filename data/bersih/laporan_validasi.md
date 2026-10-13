@@ -59,7 +59,7 @@ Aturan: buang awalan `POLSEK`, rapikan spasi, ubah ke huruf kapital di awal kata
 
 Kolom `nama_wilayah_resmi` di `polsek.csv` adalah USULAN nama kecamatan resmi untuk join dengan GeoJSON. Cek ulang terhadap atribut nama di data BIG/OSM yang dipakai.
 
-Yang berbeda dari nama Polsek: Bale Endah → Baleendah, Bojong Soang → Bojongsoang, Dayeuh Kolot → Dayeuhkolot, Pasir Jambu → Pasirjambu, Solokan Jeruk → Solokanjeruk
+Yang berbeda dari nama Polsek: Bale Endah → Baleendah, Bojong Soang → Bojongsoang, Dayeuh Kolot → Dayeuhkolot, Pasir Jambu → Pasirjambu
 
 ## Ringkasan
 

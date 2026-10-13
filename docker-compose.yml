@@ -18,6 +18,7 @@ services:
       - ./backend/db/migrations:/migrations:ro     # file migrasi skema (dijalankan manual lewat run.sh)
       - ./backend/db/seed:/seed:ro                 # skrip impor data (import.sh)
       - ./data/bersih:/data/bersih:ro              # CSV bersih yang diimpor
+      - ./data/geojson:/data/geojson:ro            # GeoJSON poligon wilayah
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-gis_kriminalitas}"]
       interval: 5s
