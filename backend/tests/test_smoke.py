@@ -20,7 +20,7 @@ def test_tahun(client, db_hidup):
 
 
 def test_endpoint_belum_dikerjakan_pakai_format_error(client, db_hidup):
-    r = client.get("/api/statistik")
+    r = client.get("/api/export")                       # ekspor laporan belum dikerjakan (tugas 33)
     assert r.status_code == 501
     assert r.json()["error"]["kode"] == "BELUM_DIIMPLEMENTASI"
 

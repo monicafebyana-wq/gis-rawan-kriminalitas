@@ -11,6 +11,8 @@
 | Format | JSON, UTF-8. Peta memakai **GeoJSON** (WGS 84 / EPSG:4326, urutan koordinat `[lng, lat]`) |
 | Bahasa nama field | Indonesia, `snake_case` |
 | Tahun | integer. Kalau `tahun` tidak dikirim → pakai tahun terbaru yang ada di DB (sekarang 2024) |
+| Tahun tanpa data | `GET /api/polsek`, `/api/polsek/{id}`, `/api/statistik` → **404** `TIDAK_DITEMUKAN`; `GET /api/kasus` → `200` dengan `data` kosong |
+| Poligon belum diimpor | `geometry` bernilai `null` dan `pusat` `null` pada feature tsb (field lain tetap terisi) |
 | Filter banyak nilai | dipisah koma, mis. `jenis=1,16` |
 | Autentikasi | Endpoint publik: semua `GET`. Endpoint admin: header `Authorization: Bearer <token>` |
 | CORS | Aktifkan untuk origin front end saat development |
@@ -327,12 +329,13 @@ Setiap tambah/ubah/hapus/impor → back end **menghitung ulang** tabel `zona_ker
 | `mode` | `tambah` / `timpa` | `timpa` = hapus data tahun tsb dulu. Default `timpa` |
 | `dry_run` | bool | `true` = hanya validasi, tidak menyimpan |
 
-Validasi: nama Polsek harus cocok dengan tabel `polsek`; angka >= 0; `Jumlah` = jumlah 18 kolom jenis.
+Validasi: nama Polsek harus cocok dengan tabel `polsek` (awalan `POLSEK` & huruf besar dinormalisasi); 18 kolom jenis harus bilangan bulat >= 0; `Jumlah` (jika ada) = jumlah 18 kolom jenis; tiap Polsek hanya sekali. Berkas `.csv` maks 2 MB, pemisah `,` atau `;`.
+`mode=tambah` = gabung: baris baru ditambahkan, yang sudah ada diperbarui, data lain dibiarkan. Polsek yang tidak ada di berkas dilaporkan di `peringatan`.
 Respons `200`:
 ```json
 { "tahun": 2024, "baris_dibaca": 27, "baris_valid": 27, "total_kasus": 1163, "peringatan": [], "disimpan": true }
 ```
-Jika ada baris bermasalah → `400` dengan `detail` berisi nomor baris dan alasan.
+Jika ada baris bermasalah → `400` dengan `detail` berisi nomor baris dan alasan (maks 50); **tidak ada data yang tersimpan**.
 
 ---
 

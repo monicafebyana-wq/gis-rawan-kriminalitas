@@ -192,6 +192,7 @@ python -m venv .venv
 pip install -r requirements-dev.txt
 uvicorn app.main:app --reload --port 3000
 ```
+Buat akun admin sekali saja: `python -m app.buat_pengguna admin --peran admin` (lihat `backend/README.md` → *Login, akun, dan hak akses*).
 Cek: buka http://localhost:3000/api/health (harus `"status":"ok"`) dan http://localhost:3000/docs (dokumentasi interaktif).
 Backend membaca `.env` di root repo (nilai `DB_*`). Port 3000 sama dengan mock server — jalankan salah satu saja.
 

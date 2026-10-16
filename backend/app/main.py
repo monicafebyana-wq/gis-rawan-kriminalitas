@@ -2,6 +2,7 @@
     uvicorn app.main:app --reload --port 3000
 Dokumentasi interaktif otomatis: http://localhost:3000/docs
 """
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
@@ -15,6 +16,8 @@ from app.routers import auth, health, kasus, laporan, polsek, referensi, statist
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    if settings.jwt_secret == "ganti_dengan_string_acak":
+        logging.getLogger("uvicorn.error").warning("JWT_SECRET masih nilai bawaan - ganti di .env sebelum dipakai sungguhan")
     db.buka_pool()
     yield
     db.tutup_pool()

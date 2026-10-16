@@ -3,4 +3,5 @@ uvicorn[standard]>=0.30
 psycopg[binary,pool]>=3.2,<4.0
 pydantic-settings>=2.5,<3.0
 python-multipart>=0.0.9
-# ditambahkan nanti saat mengerjakan autentikasi: pyjwt, bcrypt
+pyjwt>=2.8
+bcrypt>=4.1

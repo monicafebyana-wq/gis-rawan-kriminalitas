@@ -22,9 +22,10 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "*"          # pisahkan koma, mis. "http://localhost:5500,http://127.0.0.1:5500"
 
-    # Autentikasi (dipakai di tugas login)
+    # Autentikasi
     jwt_secret: str = "ganti_dengan_string_acak"
     jwt_berlaku_detik: int = 86400
+    bcrypt_rounds: int = 12          # makin tinggi makin aman tapi makin lambat (tes memakai 4)
 
     @property
     def cors_origin_list(self) -> list[str]:

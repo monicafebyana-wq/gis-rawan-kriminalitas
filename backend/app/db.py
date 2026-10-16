@@ -21,15 +21,16 @@ from app.errors import ApiError
 _pool: ConnectionPool | None = None
 
 
+def conninfo() -> str:
+    return make_conninfo(host=settings.db_host, port=settings.db_port, dbname=settings.db_name,
+                         user=settings.db_user, password=settings.db_password)
+
+
 def buka_pool() -> None:
     """Dipanggil saat aplikasi start. Tidak memblokir/gagal bila DB belum menyala (cek lewat /api/health)."""
     global _pool
-    conninfo = make_conninfo(
-        host=settings.db_host, port=settings.db_port, dbname=settings.db_name,
-        user=settings.db_user, password=settings.db_password,
-    )
     _pool = ConnectionPool(
-        conninfo, min_size=settings.db_pool_min, max_size=settings.db_pool_max,
+        conninfo(), min_size=settings.db_pool_min, max_size=settings.db_pool_max,
         kwargs={"row_factory": dict_row}, open=False, timeout=settings.db_timeout,
     )
     _pool.open(wait=False)
