@@ -68,3 +68,15 @@ body {
   padding: 16px;
   color: #5b6472;
 }
+
+/* Tabel Kelola Data: kolom jumlah cukup lebar untuk kolom isian, tapi tidak memaksa tabel melebar di HP */
+.kolom-jumlah { min-width: 64px; }
+@media (min-width: 576px) { .kolom-jumlah { min-width: 110px; } }
+
+/* HP: rapatkan tabel supaya kolom Aksi tidak terpotong */
+@media (max-width: 575.98px) {
+  .tabel-admin th,
+  .tabel-admin td { padding: 0.35rem 0.25rem; font-size: 0.8rem; }
+  .tabel-admin .btn { padding: 0.15rem 0.4rem; font-size: 0.75rem; }
+  .kolom-jumlah { min-width: 56px; }
+}
