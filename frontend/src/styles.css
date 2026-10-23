@@ -1,0 +1,82 @@
+/* Gaya tambahan di atas Bootstrap. Warna zona sesuai docs/api-contract.md */
+:root {
+  --zona-tinggi: #ff3131;
+  --zona-sedang: #ffc800;
+  --zona-rendah: #20a99b;
+}
+
+body {
+  background: #f4f5f7;
+}
+
+.dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+.dot-tinggi { background: var(--zona-tinggi); }
+.dot-sedang { background: var(--zona-sedang); }
+.dot-rendah { background: var(--zona-rendah); }
+
+.peta-wrap {
+  position: relative;
+}
+.peta-area {
+  height: 72vh;
+  min-height: 420px;
+  border: 1px solid #8a93a1;
+  border-radius: 12px;
+  background: #dfe6ee;
+  z-index: 0;
+}
+.legenda {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.peta-memuat {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px 14px;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.popup-polsek { min-width: 220px; max-height: 240px; overflow-y: auto; }
+.popup-polsek table { font-size: 0.85rem; }
+
+/* HP: peta lebih pendek supaya halaman tidak terlalu panjang */
+@media (max-width: 991.98px) {
+  .peta-area { height: 60vh; min-height: 360px; }
+}
+
+.todo-box {
+  border: 2px dashed #b9c1cc;
+  border-radius: 10px;
+  padding: 16px;
+  color: #5b6472;
+}
+
+/* Tabel Kelola Data: kolom jumlah cukup lebar untuk kolom isian, tapi tidak memaksa tabel melebar di HP */
+.kolom-jumlah { min-width: 64px; }
+@media (min-width: 576px) { .kolom-jumlah { min-width: 110px; } }
+
+/* HP: rapatkan tabel supaya kolom Aksi tidak terpotong */
+@media (max-width: 575.98px) {
+  .tabel-admin th,
+  .tabel-admin td { padding: 0.35rem 0.25rem; font-size: 0.8rem; }
+  .tabel-admin .btn { padding: 0.15rem 0.4rem; font-size: 0.75rem; }
+  .kolom-jumlah { min-width: 56px; }
+}
