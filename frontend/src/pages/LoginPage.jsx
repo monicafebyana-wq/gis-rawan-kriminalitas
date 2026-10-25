@@ -81,7 +81,7 @@ export default function LoginPage() {
               Belum punya akun? <Link to="/daftar">Daftar</Link>
             </div>
             <div className="text-center mt-2">
-              <Link to="/">← Kembali ke peta</Link>
+              <Link to="/">← Kembali ke dashboard</Link>
             </div>
           </form>
         </div>

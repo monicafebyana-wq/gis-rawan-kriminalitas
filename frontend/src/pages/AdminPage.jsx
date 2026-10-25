@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 
-// Halaman Kelola Data (admin/operator): tabel kasus, tambah, ubah, hapus, dan impor rekap CSV.
+// Halaman Kelola Data (admin/operator): tabel kasus, ubah, hapus, dan impor rekap CSV.
+// Tambah data ada di halaman sendiri: /admin/tambah (TambahKasusPage.jsx).
 // Hak akses: operator boleh tambah/ubah/impor; hanya admin yang boleh hapus.
 const BATAS = 20; // baris per halaman
 
@@ -10,12 +12,13 @@ export default function AdminPage() {
   const { sesi, logout } = useAuth();
   const token = sesi.token;
   const adalahAdmin = sesi.pengguna.peran === 'admin';
+  const lokasi = useLocation();
+  const navigate = useNavigate();
 
   // Pilihan untuk dropdown
   const [daftarTahun, setDaftarTahun] = useState([]);
   const [daftarJenis, setDaftarJenis] = useState([]);
   const [daftarPolsek, setDaftarPolsek] = useState([]);
-  const [tahunBaru, setTahunBaru] = useState('');
 
   // Tabel
   const [filter, setFilter] = useState({ tahun: '', polsek: '', jenis: '' });
@@ -23,12 +26,12 @@ export default function AdminPage() {
   const [hasil, setHasil] = useState(null); // { data, total_data }
   const [memuat, setMemuat] = useState(false);
   const [versi, setVersi] = useState(0); // naikkan untuk memuat ulang tabel
-  const [pesan, setPesan] = useState(null); // { tipe: 'success'|'danger', teks }
+  // Pesan bisa datang dari halaman Tambah Data (lewat state navigasi).
+  const [pesan, setPesan] = useState(
+    lokasi.state?.pesan ? { tipe: 'success', teks: lokasi.state.pesan } : null
+  ); // { tipe: 'success'|'danger', teks }
 
-  // Form tambah & ubah
-  const [formBuka, setFormBuka] = useState(false);
-  const [form, setForm] = useState({ id_polsek: '', id_jenis: '', tahun: '', jumlah: '' });
-  const [sedangSimpan, setSedangSimpan] = useState(false);
+  // Ubah jumlah (langsung di baris tabel)
   const [ubahId, setUbahId] = useState(null);
   const [ubahJumlah, setUbahJumlah] = useState('');
 
@@ -40,6 +43,12 @@ export default function AdminPage() {
   const [hasilImpor, setHasilImpor] = useState(null);
 
   const muatUlang = () => setVersi((v) => v + 1);
+
+  // Hapus state navigasi supaya pesan tidak muncul lagi saat halaman di-refresh.
+  useEffect(() => {
+    if (lokasi.state?.pesan) navigate(lokasi.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Isi pilihan dropdown sekali di awal (dan saat data tahun berubah lewat muatTahun).
   const muatTahun = useCallback(() => {
@@ -59,7 +68,6 @@ export default function AdminPage() {
             .sort((a, b) => a.nama.localeCompare(b.nama))
         );
         setFilter((f) => ({ ...f, tahun: String(terbaru) }));
-        setTahunBaru(String(terbaru));
         setTahunImpor(String(terbaru));
       })
       .catch((e) => setPesan({ tipe: 'danger', teks: e.message }));
@@ -90,28 +98,6 @@ export default function AdminPage() {
     if (e.status === 409)
       return 'Data untuk Polsek, jenis, dan tahun itu sudah ada. Pakai tombol Ubah di tabel untuk mengganti jumlahnya.';
     return `${awalan}${e.message}`;
-  }
-
-  async function tambah(e) {
-    e.preventDefault();
-    setSedangSimpan(true);
-    setPesan(null);
-    try {
-      await api.tambahKasus(token, {
-        id_polsek: Number(form.id_polsek),
-        id_jenis: Number(form.id_jenis),
-        tahun: Number(form.tahun),
-        jumlah: Number(form.jumlah),
-      });
-      setPesan({ tipe: 'success', teks: 'Data berhasil ditambahkan. Warna zona di peta ikut diperbarui.' });
-      setForm({ ...form, jumlah: '' });
-      await muatTahun();
-      muatUlang();
-    } catch (err) {
-      setPesan({ tipe: 'danger', teks: pesanGalat(err, 'Gagal menambah data: ') });
-    } finally {
-      setSedangSimpan(false);
-    }
   }
 
   async function simpanUbah(k) {
@@ -205,87 +191,14 @@ export default function AdminPage() {
             <div className="card-body">
               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                 <h2 className="h5 mb-0">Data kasus</h2>
-                <button
-                  type="button"
+                <Link
+                  to="/admin/tambah-data"
+                  state={{ tahun: filter.tahun }}
                   className="btn btn-primary btn-sm"
-                  onClick={() => {
-                    setFormBuka(!formBuka);
-                    setForm({ ...form, tahun: form.tahun || filter.tahun });
-                  }}
                 >
-                  {formBuka ? 'Tutup form' : '+ Tambah data'}
-                </button>
+                  + Tambah data
+                </Link>
               </div>
-
-              {formBuka && (
-                <form className="border rounded p-3 mb-3 bg-light" onSubmit={tambah}>
-                  <div className="row g-2">
-                    <div className="col-12 col-md-6">
-                      <label className="form-label small fw-semibold" htmlFor="a-polsek">Wilayah (Polsek)</label>
-                      <select
-                        id="a-polsek"
-                        className="form-select"
-                        required
-                        value={form.id_polsek}
-                        onChange={(e) => setForm({ ...form, id_polsek: e.target.value })}
-                      >
-                        <option value="">Pilih Polsek…</option>
-                        {daftarPolsek.map((p) => (
-                          <option key={p.id} value={p.id}>{p.nama}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label small fw-semibold" htmlFor="a-jenis">Jenis kejahatan</label>
-                      <select
-                        id="a-jenis"
-                        className="form-select"
-                        required
-                        value={form.id_jenis}
-                        onChange={(e) => setForm({ ...form, id_jenis: e.target.value })}
-                      >
-                        <option value="">Pilih jenis…</option>
-                        {daftarJenis.map((j) => (
-                          <option key={j.id_jenis} value={j.id_jenis}>{j.nama_jenis}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-6">
-                      <label className="form-label small fw-semibold" htmlFor="a-tahun">Tahun</label>
-                      <input
-                        id="a-tahun"
-                        type="number"
-                        className="form-control"
-                        min="2000"
-                        max="2100"
-                        required
-                        value={form.tahun}
-                        onChange={(e) => setForm({ ...form, tahun: e.target.value })}
-                      />
-                    </div>
-                    <div className="col-6">
-                      <label className="form-label small fw-semibold" htmlFor="a-jumlah">Jumlah kasus</label>
-                      <input
-                        id="a-jumlah"
-                        type="number"
-                        className="form-control"
-                        min="0"
-                        required
-                        value={form.jumlah}
-                        onChange={(e) => setForm({ ...form, jumlah: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="d-flex gap-2 mt-3">
-                    <button className="btn btn-primary btn-sm" type="submit" disabled={sedangSimpan}>
-                      {sedangSimpan ? 'Menyimpan…' : 'Simpan'}
-                    </button>
-                    <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => setFormBuka(false)}>
-                      Batal
-                    </button>
-                  </div>
-                </form>
-              )}
 
               <div className="row g-2 mb-3">
                 <div className="col-4 col-md-3">

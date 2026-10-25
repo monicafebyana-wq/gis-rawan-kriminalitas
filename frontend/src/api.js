@@ -28,7 +28,14 @@ async function request(path, { params, method = 'GET', body, form, token } = {})
     throw new Error('Tidak bisa terhubung ke server. Pastikan backend (atau mock server) sudah jalan.');
   }
 
-  const data = await res.json().catch(() => null);
+  // Rapikan penulisan nama wilayah di satu tempat, berlaku untuk semua halaman.
+  const teks = await res.text();
+  let data = null;
+  try {
+    data = JSON.parse(teks.replace(/Bale\s?Endah/gi, 'Baleendah'));
+  } catch {
+    data = null;
+  }
   if (!res.ok) {
     // Token kedaluwarsa/ditolak: beri tahu aplikasi supaya otomatis keluar.
     if (res.status === 401 && token) window.dispatchEvent(new Event('sesi-habis'));
