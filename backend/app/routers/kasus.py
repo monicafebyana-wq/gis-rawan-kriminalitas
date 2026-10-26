@@ -1,5 +1,6 @@
 """Data tabel kasus (GET publik) + CRUD (POST/PUT: operator/admin, DELETE: khusus admin). Lihat api-contract.md bagian 2.5 & 3.4.
 Catatan: f-string di bawah hanya menyisipkan potongan SQL tetap (bukan input pengguna); semua nilai lewat parameter."""
+import psycopg
 from fastapi import APIRouter, Query, Response
 from pydantic import BaseModel, Field
 
@@ -20,10 +21,22 @@ class KasusBaru(BaseModel):
 
 
 class KasusUbah(BaseModel):
-    jumlah: int = Field(ge=0)
+    """Semua field opsional: kirim hanya yang ingin diubah (minimal satu)."""
+    id_polsek: int | None = None
+    id_jenis: int | None = None
+    tahun: int | None = Field(None, ge=2000, le=2100)
+    jumlah: int | None = Field(None, ge=0)
 
 
 _KOLOM = "id_kasus, id_polsek, id_jenis, tahun, jumlah"
+_REFERENSI = {"id_polsek": "polsek", "id_jenis": "jenis_kejahatan"}      # kolom -> tabel (konstanta, bukan input pengguna)
+
+
+def _cek_referensi(conn, **nilai: int | None) -> None:
+    salah = [k for k, v in nilai.items()
+             if v is not None and conn.execute(f"SELECT 1 FROM {_REFERENSI[k]} WHERE {k} = %s", (v,)).fetchone() is None]
+    if salah:
+        raise validasi_gagal("Referensi tidak ditemukan: " + ", ".join(salah), salah)
 
 
 @router.get("/kasus", summary="Daftar kasus (paginasi)")
@@ -54,29 +67,35 @@ def daftar_kasus(
 
 @router.post("/kasus", status_code=201, summary="Tambah kasus (operator/admin)")
 def tambah_kasus(body: KasusBaru, conn: Conn, user: Pengguna):
-    salah = [n for n, tabel, kolom, nilai in (("id_polsek", "polsek", "id_polsek", body.id_polsek),
-                                              ("id_jenis", "jenis_kejahatan", "id_jenis", body.id_jenis))
-             if conn.execute(f"SELECT 1 FROM {tabel} WHERE {kolom} = %s", (nilai,)).fetchone() is None]
-    if salah:
-        raise validasi_gagal("Referensi tidak ditemukan: " + ", ".join(salah), salah)
+    _cek_referensi(conn, id_polsek=body.id_polsek, id_jenis=body.id_jenis)
     row = conn.execute(
         f"""INSERT INTO kasus_kejahatan (id_polsek, id_jenis, tahun, jumlah) VALUES (%s, %s, %s, %s)
             ON CONFLICT (id_polsek, id_jenis, tahun) DO NOTHING RETURNING {_KOLOM}""",
         (body.id_polsek, body.id_jenis, body.tahun, body.jumlah)).fetchone()
     if row is None:
-        raise ApiError(409, "DATA_SUDAH_ADA", "Kombinasi polsek+jenis+tahun sudah ada (pakai PUT untuk mengubah jumlahnya)")
+        raise ApiError(409, "DATA_SUDAH_ADA", "Kombinasi polsek+jenis+tahun sudah ada (pakai PUT /kasus/{id} untuk mengubahnya)")
     zonasi.refresh_zona(conn, body.tahun)
     conn.commit()
     return row
 
 
-@router.put("/kasus/{id_kasus}", summary="Ubah jumlah kasus (operator/admin)")
+@router.put("/kasus/{id_kasus}", summary="Ubah kasus - semua field boleh diubah (operator/admin)")
 def ubah_kasus(id_kasus: int, body: KasusUbah, conn: Conn, user: Pengguna):
-    row = conn.execute(f"UPDATE kasus_kejahatan SET jumlah = %s WHERE id_kasus = %s RETURNING {_KOLOM}",
-                       (body.jumlah, id_kasus)).fetchone()
-    if row is None:
+    perubahan = body.model_dump(exclude_none=True)
+    if not perubahan:
+        raise validasi_gagal("Kirim minimal satu field yang ingin diubah", list(KasusUbah.model_fields))
+    lama = conn.execute(f"SELECT {_KOLOM} FROM kasus_kejahatan WHERE id_kasus = %s FOR UPDATE", (id_kasus,)).fetchone()
+    if lama is None:
         raise tidak_ditemukan(f"Kasus dengan id {id_kasus} tidak ditemukan")
-    zonasi.refresh_zona(conn, row["tahun"])
+    _cek_referensi(conn, id_polsek=perubahan.get("id_polsek"), id_jenis=perubahan.get("id_jenis"))
+    set_sql = ", ".join(f"{k} = %({k})s" for k in perubahan)               # nama kolom dari model (tetap); nilai lewat parameter
+    try:
+        row = conn.execute(f"UPDATE kasus_kejahatan SET {set_sql} WHERE id_kasus = %(id_kasus)s RETURNING {_KOLOM}",
+                           {**perubahan, "id_kasus": id_kasus}).fetchone()
+    except psycopg.errors.UniqueViolation:
+        raise ApiError(409, "DATA_SUDAH_ADA", "Kombinasi polsek+jenis+tahun itu sudah dipakai data kasus lain")
+    for t in {lama["tahun"], row["tahun"]}:                                 # tahun lama & baru sama-sama dihitung ulang zonanya
+        zonasi.refresh_zona(conn, t)
     conn.commit()
     return row
 

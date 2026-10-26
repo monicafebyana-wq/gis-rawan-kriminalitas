@@ -45,7 +45,8 @@ backend/
 │     ├─ polsek.py                 # SUDAH JALAN: /polsek (GeoJSON), /polsek/{id}
 │     ├─ kasus.py                  # SUDAH JALAN: GET, POST, PUT, DELETE
 │     ├─ statistik.py              # SUDAH JALAN: /statistik, /statistik/tren
-│     ├─ auth.py                   # SUDAH JALAN: /auth/login, /auth/me
+│     ├─ auth.py                   # SUDAH JALAN: /auth/login, /auth/me, /auth/ubah-password
+│     ├─ pengguna.py               # SUDAH JALAN: /pengguna (daftar/tambah/ubah/hapus akun, khusus admin)
 │     └─ laporan.py                # /import/csv sudah jalan; TODO: /export (33)
 ├─ db/
 │  ├─ migrations/      # skema + fungsi zonasi + seed jenis (run.sh)
@@ -62,6 +63,8 @@ Endpoint `GET` bersifat publik. Yang mengubah data butuh login:
 |---|:-:|:-:|
 | `POST /api/kasus`, `PUT /api/kasus/{id}`, `POST /api/import/csv` | ✅ | ✅ |
 | `DELETE /api/kasus/{id}` | ❌ 403 | ✅ |
+| `GET/POST /api/pengguna`, `PUT/DELETE /api/pengguna/{id}` (kelola akun) | ❌ 403 | ✅ |
+| `POST /api/auth/ubah-password` (ganti password sendiri) | ✅ | ✅ |
 
 **1. Buat akun pertama** (database harus menyala, venv aktif, dari folder `backend/`; password ditanya dan tidak tampil):
 ```powershell
@@ -81,7 +84,17 @@ Mengganti secret membuat semua token lama tidak berlaku.
 
 Kode status: tidak login / token salah → `401`; peran kurang → `403`. Peran dibaca dari database di tiap request, jadi akun yang dihapus langsung kehilangan akses.
 
+## Mendaftarkan admin/operator baru
+Alur: **admin yang sudah login mendaftarkan akun baru** (tidak ada pendaftaran mandiri). Admin pertama dibuat lewat CLI di atas.
+```
+POST /api/pengguna        {"username": "petugas2", "password": "min-8-karakter", "peran": "admin"}   # peran default: operator
+PUT  /api/pengguna/{id}   {"peran": "operator", "password": "reset-baru-123"}                       # keduanya opsional, minimal satu
+DELETE /api/pengguna/{id}
+```
+Pengaman: tidak bisa menghapus akun sendiri, dan sistem menolak aksi yang membuat admin habis (`409 AKSI_DITOLAK`).
+
 ## Impor CSV & CRUD kasus
+- `PUT /api/kasus/{id}` boleh mengubah **semua field** (`id_polsek`, `id_jenis`, `tahun`, `jumlah`); kirim hanya yang berubah. Kombinasi polsek+jenis+tahun yang bentrok -> `409`; zona tahun lama & baru dihitung ulang.
 - `POST /api/import/csv` (form-data): `file` (.csv, maks 2 MB), `tahun`, `mode` (`timpa` default = hapus data tahun itu dulu; `tambah` = gabung/perbarui), `dry_run` (`true` = hanya validasi).
 - Format CSV sama dengan `data/rekap_kriminalitas_2024.csv`: kolom `Polsek` + 18 kolom jenis (kolom `Jumlah` opsional, dicek = jumlah 18 jenis). Pemisah `,` atau `;` dan file dari Excel (BOM) didukung. Nama Polsek dinormalisasi (`POLSEK BALE ENDAH` = `Bale Endah`).
 - **Gunakan `dry_run=true` dulu.** Kalau ada yang salah, respons `400` memuat daftar `detail` dengan nomor baris dan alasannya, dan **tidak ada** yang tersimpan.

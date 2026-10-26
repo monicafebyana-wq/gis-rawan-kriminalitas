@@ -67,3 +67,30 @@ def test_ubah_hapus_id_tidak_ada_404(client, header):
     assert client.put("/api/kasus/9999999", json={"jumlah": 1}, headers=header["operator"]).status_code == 404
     assert client.delete("/api/kasus/9999999", headers=header["admin"]).status_code == 404
     assert client.put("/api/kasus/1", json={"jumlah": -5}, headers=header["operator"]).status_code == 400
+
+
+def test_ubah_semua_field(client, header, bersih_tahun_uji):
+    k = client.post("/api/kasus", json=BARU, headers=header["operator"]).json()
+    url = f"/api/kasus/{k['id_kasus']}"
+    # ubah semua field sekaligus -> pindah tahun 2099 -> 2098; zona kedua tahun ikut dihitung ulang
+    r = client.put(url, json={"id_polsek": 2, "id_jenis": 2, "tahun": 2098, "jumlah": 5}, headers=header["operator"])
+    assert r.status_code == 200
+    assert {x: r.json()[x] for x in ("id_polsek", "id_jenis", "tahun", "jumlah")} == {"id_polsek": 2, "id_jenis": 2, "tahun": 2098, "jumlah": 5}
+    assert client.get("/api/kasus?tahun=2099").json()["total_data"] == 0
+    assert client.get("/api/kasus?tahun=2098").json()["total_data"] == 1
+    assert 2099 not in client.get("/api/tahun").json()["data"] and 2098 in client.get("/api/tahun").json()["data"]
+    # ubah sebagian saja: field lain tidak berubah
+    r = client.put(url, json={"tahun": 2099}, headers=header["operator"])
+    assert r.status_code == 200 and (r.json()["id_polsek"], r.json()["jumlah"], r.json()["tahun"]) == (2, 5, 2099)
+
+
+def test_ubah_bentrok_dan_tidak_valid(client, header, bersih_tahun_uji):
+    a = client.post("/api/kasus", json=BARU, headers=header["operator"]).json()
+    b = client.post("/api/kasus", json={**BARU, "tahun": 2098}, headers=header["operator"]).json()
+    r = client.put(f"/api/kasus/{b['id_kasus']}", json={"tahun": 2099}, headers=header["operator"])     # kembar dengan a
+    assert r.status_code == 409 and r.json()["error"]["kode"] == "DATA_SUDAH_ADA"
+    assert client.get("/api/kasus?tahun=2098").json()["total_data"] == 1                                 # b tidak berubah
+    assert client.put(f"/api/kasus/{a['id_kasus']}", json={}, headers=header["operator"]).status_code == 400
+    r = client.put(f"/api/kasus/{a['id_kasus']}", json={"id_polsek": 99999}, headers=header["operator"])
+    assert r.status_code == 400 and "id_polsek" in r.json()["error"]["detail"]
+    assert client.put(f"/api/kasus/{a['id_kasus']}", json={"tahun": 1999}, headers=header["operator"]).status_code == 400

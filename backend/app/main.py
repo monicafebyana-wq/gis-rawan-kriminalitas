@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__, db
 from app.config import settings
 from app.errors import daftar_handler
-from app.routers import auth, health, kasus, laporan, polsek, referensi, statistik
+from app.routers import auth, health, kasus, laporan, pengguna, polsek, referensi, statistik
 
 
 @asynccontextmanager
@@ -39,6 +39,6 @@ app.add_middleware(
 daftar_handler(app)
 
 api = APIRouter(prefix="/api")
-for r in (health.router, referensi.router, polsek.router, kasus.router, statistik.router, auth.router, laporan.router):
+for r in (health.router, referensi.router, polsek.router, kasus.router, statistik.router, auth.router, pengguna.router, laporan.router):
     api.include_router(r)
 app.include_router(api)
