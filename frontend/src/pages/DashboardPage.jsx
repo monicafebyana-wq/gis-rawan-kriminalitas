@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 import { api } from '../api.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip);
 
-// Halaman Ringkasan Data (dashboard): kartu ringkasan + grafik batang + tren.
+// Halaman Dashboard (beranda): kartu ringkasan + grafik batang + tren.
 // Data dari GET /api/statistik dan GET /api/statistik/tren.
 const WARNA = { tinggi: '#FF3131', sedang: '#FFC800', rendah: '#20A99B' };
 const angka = (n) => Number(n).toLocaleString('id-ID');
@@ -57,18 +58,22 @@ export default function DashboardPage() {
   if (galat) {
     return (
       <div className="alert alert-danger" role="alert">
-        Data belum bisa dimuat ({galat}). Pastikan API sudah jalan: <code>cd mock-server &amp;&amp; node server.js</code>
+        Data belum bisa dimuat ({galat}). Pastikan backend sudah jalan di <code>http://localhost:3000</code>.
       </div>
     );
   }
-  if (!stat) return <p className="text-secondary">Memuat ringkasan…</p>;
+  if (!stat) return <p className="text-secondary">Memuat dashboard…</p>;
 
   const namaJenisTop = stat.top_jenis.map((j) => j.nama_jenis).join(', ');
 
   return (
     <>
-      <h1 className="h3">Ringkasan kasus kejahatan {stat.tahun}</h1>
-      <p className="text-secondary">Di mana kasus paling banyak, dan jenis apa yang paling sering terjadi.</p>
+      <section className="hero-kopi mb-4">
+        <div className="hero-kicker">Kabupaten Bandung · Data tahun {stat.tahun}</div>
+        <h1 className="h2">Dashboard kasus kejahatan {stat.tahun}</h1>
+        <p className="mb-3">Di mana kasus paling banyak, dan jenis apa yang paling sering terjadi.</p>
+        <Link className="btn btn-primary" to="/peta">Lihat peta kerawanan</Link>
+      </section>
 
       <div className="row g-3 mb-3">
         <Kartu judul="Total kasus" nilai={angka(stat.total_kasus)} catatan={`di ${stat.jumlah_polsek} wilayah Polsek`} />
@@ -117,7 +122,7 @@ export default function DashboardPage() {
               <BatangMendatar
                 label={stat.per_jenis.map((j) => j.nama_jenis)}
                 nilai={stat.per_jenis.map((j) => j.jumlah)}
-                warna="#4C6EF5"
+                warna="#C4601A"
               />
             </div>
           </div>
@@ -130,7 +135,7 @@ export default function DashboardPage() {
                 <Line
                   data={{
                     labels: tren.map((t) => String(t.tahun)),
-                    datasets: [{ data: tren.map((t) => t.total_kasus), borderColor: '#4C6EF5', backgroundColor: '#4C6EF5', pointRadius: 5, tension: 0.2 }],
+                    datasets: [{ data: tren.map((t) => t.total_kasus), borderColor: '#4B5C3C', backgroundColor: '#4B5C3C', pointRadius: 5, tension: 0.2 }],
                   }}
                   options={{
                     maintainAspectRatio: false,
