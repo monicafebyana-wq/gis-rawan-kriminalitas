@@ -6,10 +6,11 @@ import { api } from '../api.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip);
 
-// Halaman Dashboard (beranda): kartu ringkasan + grafik batang + tren.
+// Halaman Dashboard (beranda): kartu ringkasan + grafik TOP 5 + tren.
 // Data dari GET /api/statistik dan GET /api/statistik/tren.
 const WARNA = { tinggi: '#FF3131', sedang: '#FFC800', rendah: '#20A99B' };
 const angka = (n) => Number(n).toLocaleString('id-ID');
+const TOP = 5;
 
 function Kartu({ judul, nilai, catatan }) {
   return (
@@ -25,7 +26,6 @@ function Kartu({ judul, nilai, catatan }) {
   );
 }
 
-// Grafik batang mendatar: tinggi menyesuaikan jumlah baris supaya semua label terbaca.
 function BatangMendatar({ label, nilai, warna }) {
   const data = { labels: label, datasets: [{ data: nilai, backgroundColor: warna, borderRadius: 3 }] };
   const opsi = {
@@ -66,13 +66,20 @@ export default function DashboardPage() {
 
   const namaJenisTop = stat.top_jenis.map((j) => j.nama_jenis).join(', ');
 
+  // Top 5: urut dari terbanyak, ambil 5 teratas.
+  const topPolsek = [...stat.per_polsek].sort((a, b) => b.total_kasus - a.total_kasus).slice(0, TOP);
+  const topJenis = [...stat.per_jenis].sort((a, b) => b.jumlah - a.jumlah).slice(0, TOP);
+
   return (
     <>
       <section className="hero-kopi mb-4">
         <div className="hero-kicker">Kabupaten Bandung · Data tahun {stat.tahun}</div>
         <h1 className="h2">Dashboard kasus kejahatan {stat.tahun}</h1>
         <p className="mb-3">Di mana kasus paling banyak, dan jenis apa yang paling sering terjadi.</p>
-        <Link className="btn btn-primary" to="/peta">Lihat peta kerawanan</Link>
+        <div className="d-flex flex-wrap gap-2">
+          <Link className="btn btn-primary" to="/peta">Lihat peta kerawanan</Link>
+          <Link className="btn btn-outline-secondary" to="/detail-kasus-grafik">Lihat detail kasus</Link>
+        </div>
       </section>
 
       <div className="row g-3 mb-3">
@@ -106,11 +113,11 @@ export default function DashboardPage() {
         <div className="col-12 col-lg-6">
           <div className="card h-100">
             <div className="card-body">
-              <h2 className="h6">Kasus per Polsek</h2>
+              <h2 className="h6">Top {TOP} Polsek dengan kasus terbanyak</h2>
               <BatangMendatar
-                label={stat.per_polsek.map((p) => p.nama_polsek)}
-                nilai={stat.per_polsek.map((p) => p.total_kasus)}
-                warna={stat.per_polsek.map((p) => WARNA[p.kategori_zona])}
+                label={topPolsek.map((p) => p.nama_polsek)}
+                nilai={topPolsek.map((p) => p.total_kasus)}
+                warna={topPolsek.map((p) => WARNA[p.kategori_zona])}
               />
             </div>
           </div>
@@ -118,10 +125,10 @@ export default function DashboardPage() {
         <div className="col-12 col-lg-6">
           <div className="card h-100">
             <div className="card-body">
-              <h2 className="h6">Kasus per jenis kejahatan</h2>
+              <h2 className="h6">Top {TOP} jenis kejahatan</h2>
               <BatangMendatar
-                label={stat.per_jenis.map((j) => j.nama_jenis)}
-                nilai={stat.per_jenis.map((j) => j.jumlah)}
+                label={topJenis.map((j) => j.nama_jenis)}
+                nilai={topJenis.map((j) => j.jumlah)}
                 warna="#C4601A"
               />
             </div>

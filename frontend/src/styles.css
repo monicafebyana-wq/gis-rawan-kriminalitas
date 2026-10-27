@@ -385,3 +385,8 @@ h1, h2, h3, h4, h5, .navbar-brand .fw-bold {
   .tabel-admin .btn { padding: 0.15rem 0.4rem; font-size: 0.75rem; }
   .kolom-jumlah { min-width: 56px; }
 }
+
+html { scroll-behavior: smooth; }
+.submenu { padding-left: 2.25rem; }
+.submenu .menu-item { font-size: .9rem; padding: .3rem .75rem; }
+.app-shell.ringkas .submenu { display: none; }
