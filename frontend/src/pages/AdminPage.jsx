@@ -3,10 +3,17 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 
-// Halaman Kelola Data (admin/operator): tabel kasus, ubah, hapus, dan impor rekap CSV.
-// Tambah data ada di halaman sendiri: /admin/tambah (TambahKasusPage.jsx).
-// Hak akses: operator boleh tambah/ubah/impor; hanya admin yang boleh hapus.
-const BATAS = 20; // baris per halaman
+// Halaman Kelola Data (admin/operator): tabel kasus, ubah (halaman sendiri), hapus, ekspor CSV, impor CSV.
+// Tambah: /admin/tambah-data. Ubah: /admin/ubah-data.
+// Hak akses: operator boleh tambah/ubah/impor/ekspor; hanya admin yang boleh hapus.
+const BATAS = 20; // baris per halaman tabel
+
+// Sel CSV: kutip ganda digandakan; awalan = + - @ diberi ' supaya tidak dibaca sebagai rumus di Excel.
+function selCsv(nilai) {
+  let s = String(nilai ?? '');
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return `"${s.replace(/"/g, '""')}"`;
+}
 
 export default function AdminPage() {
   const { sesi, logout } = useAuth();
@@ -26,14 +33,13 @@ export default function AdminPage() {
   const [hasil, setHasil] = useState(null); // { data, total_data }
   const [memuat, setMemuat] = useState(false);
   const [versi, setVersi] = useState(0); // naikkan untuk memuat ulang tabel
-  // Pesan bisa datang dari halaman Tambah Data (lewat state navigasi).
+  // Pesan bisa datang dari halaman Tambah/Ubah Data (lewat state navigasi).
   const [pesan, setPesan] = useState(
     lokasi.state?.pesan ? { tipe: 'success', teks: lokasi.state.pesan } : null
   ); // { tipe: 'success'|'danger', teks }
 
-  // Ubah jumlah (langsung di baris tabel)
-  const [ubahId, setUbahId] = useState(null);
-  const [ubahJumlah, setUbahJumlah] = useState('');
+  // Ekspor CSV
+  const [sedangEkspor, setSedangEkspor] = useState(false);
 
   // Impor CSV
   const [berkas, setBerkas] = useState(null);
@@ -96,20 +102,8 @@ export default function AdminPage() {
   function pesanGalat(e, awalan) {
     if (e.status === 403) return 'Peran kamu tidak diizinkan melakukan ini.';
     if (e.status === 409)
-      return 'Data untuk Polsek, jenis, dan tahun itu sudah ada. Pakai tombol Ubah di tabel untuk mengganti jumlahnya.';
+      return 'Data untuk Polsek, jenis, dan tahun itu sudah ada. Pakai tombol Ubah di tabel untuk mengganti isinya.';
     return `${awalan}${e.message}`;
-  }
-
-  async function simpanUbah(k) {
-    setPesan(null);
-    try {
-      await api.ubahKasus(token, k.id_kasus, Number(ubahJumlah));
-      setPesan({ tipe: 'success', teks: `Jumlah ${k.nama_polsek} – ${k.nama_jenis} diubah jadi ${ubahJumlah}.` });
-      setUbahId(null);
-      muatUlang();
-    } catch (err) {
-      setPesan({ tipe: 'danger', teks: pesanGalat(err, 'Gagal mengubah data: ') });
-    }
   }
 
   async function hapus(k) {
@@ -124,6 +118,51 @@ export default function AdminPage() {
       muatUlang();
     } catch (err) {
       setPesan({ tipe: 'danger', teks: pesanGalat(err, 'Gagal menghapus data: ') });
+    }
+  }
+
+  // Ekspor CSV: semua baris sesuai filter yang sedang aktif (bukan hanya halaman yang tampil).
+  async function ekspor() {
+    if (!filter.tahun) return;
+    setSedangEkspor(true);
+    setPesan(null);
+    try {
+      const LIMIT = 100; // batas maksimal API
+      const prm = { ...filter, limit: LIMIT };
+      const pertama = await api.kasus({ ...prm, page: 1 });
+      const semua = [...pertama.data];
+      const jumlahHal = Math.ceil(pertama.total_data / LIMIT);
+      const sisa = await Promise.all(
+        Array.from({ length: Math.max(0, jumlahHal - 1) }, (_, i) =>
+          api.kasus({ ...prm, page: i + 2 }).then((r) => r.data)
+        )
+      );
+      sisa.forEach((b) => semua.push(...b));
+
+      if (semua.length === 0) {
+        setPesan({ tipe: 'danger', teks: 'Tidak ada data untuk diekspor dengan filter ini.' });
+        return;
+      }
+
+      const baris = [
+        ['No', 'Polsek', 'Jenis Kejahatan', 'Tahun', 'Jumlah'],
+        ...semua.map((k, i) => [i + 1, k.nama_polsek, k.nama_jenis, k.tahun, k.jumlah]),
+      ];
+      // Pemisah ";" dan BOM supaya langsung rapi di Excel pengaturan Indonesia.
+      const csv = '\uFEFF' + baris.map((r) => r.map(selCsv).join(';')).join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `data-kasus-${filter.tahun}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setPesan({ tipe: 'success', teks: `${semua.length} baris berhasil diekspor.` });
+    } catch (err) {
+      setPesan({ tipe: 'danger', teks: `Gagal mengekspor: ${err.message}` });
+    } finally {
+      setSedangEkspor(false);
     }
   }
 
@@ -191,13 +230,23 @@ export default function AdminPage() {
             <div className="card-body">
               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                 <h2 className="h5 mb-0">Data kasus</h2>
-                <Link
-                  to="/admin/tambah-data"
-                  state={{ tahun: filter.tahun }}
-                  className="btn btn-primary btn-sm"
-                >
-                  + Tambah data
-                </Link>
+                <div className="d-flex gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    disabled={sedangEkspor || !filter.tahun}
+                    onClick={ekspor}
+                  >
+                    {sedangEkspor ? 'Mengekspor…' : 'Ekspor CSV'}
+                  </button>
+                  <Link
+                    to="/admin/tambah-data"
+                    state={{ tahun: filter.tahun }}
+                    className="btn btn-primary btn-sm"
+                  >
+                    + Tambah data
+                  </Link>
+                </div>
               </div>
 
               <div className="row g-2 mb-3">
@@ -243,42 +292,19 @@ export default function AdminPage() {
                         <td>{k.nama_polsek}</td>
                         <td>{k.nama_jenis}</td>
                         <td className="d-none d-sm-table-cell">{k.tahun}</td>
-                        <td className="text-end kolom-jumlah">
-                          {ubahId === k.id_kasus ? (
-                            <input
-                              type="number"
-                              min="0"
-                              className="form-control form-control-sm text-end"
-                              aria-label="Jumlah baru"
-                              value={ubahJumlah}
-                              autoFocus
-                              onChange={(e) => setUbahJumlah(e.target.value)}
-                            />
-                          ) : (
-                            k.jumlah
-                          )}
-                        </td>
+                        <td className="text-end kolom-jumlah">{k.jumlah}</td>
                         <td className="text-end">
                           <div className="d-flex flex-column flex-sm-row justify-content-end gap-1">
-                          {ubahId === k.id_kasus ? (
-                            <>
-                              <button type="button" className="btn btn-primary btn-sm" disabled={ubahJumlah === ''} onClick={() => simpanUbah(k)}>Simpan</button>
-                              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setUbahId(null)}>Batal</button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => { setUbahId(k.id_kasus); setUbahJumlah(String(k.jumlah)); }}
-                              >
-                                Ubah
-                              </button>
-                              {adalahAdmin && (
-                                <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => hapus(k)}>Hapus</button>
-                              )}
-                            </>
-                          )}
+                            <Link
+                              to="/admin/ubah-data"
+                              state={{ kasus: k }}
+                              className="btn btn-outline-primary btn-sm"
+                            >
+                              Ubah
+                            </Link>
+                            {adalahAdmin && (
+                              <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => hapus(k)}>Hapus</button>
+                            )}
                           </div>
                         </td>
                       </tr>

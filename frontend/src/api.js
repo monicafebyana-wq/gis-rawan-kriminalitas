@@ -32,9 +32,14 @@ async function request(path, { params, method = 'GET', body, form, token } = {})
   const teks = await res.text();
   let data = null;
   try {
-    data = JSON.parse(teks.replace(/Bale\s?Endah/gi, 'Baleendah'));
+    data = JSON.parse(
+      teks
+        .replace(/Bale\s?Endah/gi, 'Baleendah')
+        .replace(/Bojong\s?Soang/gi, 'Bojongsoang')
+        .replace(/Dayeuh\s?Kolot/gi, 'Dayeuhkolot')
+    );
   } catch {
-    data = null;
+    data = null; // mis. respons 204 (tanpa isi)
   }
   if (!res.ok) {
     // Token kedaluwarsa/ditolak: beri tahu aplikasi supaya otomatis keluar.
@@ -58,15 +63,24 @@ export const api = {
   kasus: (params) => request('/kasus', { params }),
   statistik: (params) => request('/statistik', { params }),
   tren: (params) => request('/statistik/tren', { params }),
-  // Login & pendaftaran
+
+  // Login (akun hanya dibuat admin lewat halaman Kelola Admin, tidak ada pendaftaran umum)
   login: (username, password) =>
     request('/auth/login', { method: 'POST', body: { username, password } }),
-  register: (username, password) =>
-    request('/auth/register', { method: 'POST', body: { username, password } }),
   me: (token) => request('/auth/me', { token }),
+  ubahPassword: (token, password_lama, password_baru) =>
+    request('/auth/ubah-password', { method: 'POST', body: { password_lama, password_baru }, token }),
+
   // Admin / operator (butuh token)
   tambahKasus: (token, body) => request('/kasus', { method: 'POST', body, token }),
-  ubahKasus: (token, id, jumlah) => request(`/kasus/${id}`, { method: 'PUT', body: { jumlah }, token }),
+  // body: salah satu atau lebih dari { id_polsek, id_jenis, tahun, jumlah }
+  ubahKasus: (token, id, body) => request(`/kasus/${id}`, { method: 'PUT', body, token }),
   hapusKasus: (token, id) => request(`/kasus/${id}`, { method: 'DELETE', token }), // khusus admin
   imporCsv: (token, form) => request('/import/csv', { method: 'POST', form, token }),
+
+  // Kelola akun (khusus admin)
+  pengguna: (token) => request('/pengguna', { token }),
+  tambahPengguna: (token, body) => request('/pengguna', { method: 'POST', body, token }), // { username, password, peran }
+  ubahPengguna: (token, id, body) => request(`/pengguna/${id}`, { method: 'PUT', body, token }), // { peran?, password? }
+  hapusPengguna: (token, id) => request(`/pengguna/${id}`, { method: 'DELETE', token }),
 };

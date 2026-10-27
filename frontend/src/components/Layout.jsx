@@ -9,10 +9,15 @@ import { Ikon } from './Ikon.jsx';
 const JUDUL = {
   '/': 'Dashboard',
   '/peta': 'Peta Rawan Kriminalitas',
+  '/detail-kasus': 'Statistik Kriminalitas',
+  '/detail-kasus-grafik': 'Statistik Kriminalitas',
+  '/detail-kasus-tabel': 'Statistik Kriminalitas',
   '/admin': 'Kelola Data',
   '/admin/tambah-data': 'Tambah Data',
+  '/admin/ubah-data': 'Ubah Data',
+  '/admin/profil': 'Profil',
+  '/admin/pengguna': 'Kelola Admin',
   '/login': 'Masuk Admin',
-  '/daftar': 'Daftar Akun',
 };
 
 function bacaRingkas() {
@@ -29,6 +34,7 @@ export default function Layout({ children }) {
   const lokasi = useLocation();
   const [ringkas, setRingkas] = useState(bacaRingkas); // sidebar hanya ikon (desktop)
   const [terbuka, setTerbuka] = useState(false); // sidebar terbuka (HP)
+  const [statBuka, setStatBuka] = useState(lokasi.pathname.startsWith('/detail-kasus')); // submenu Statistik
 
   // Pindah halaman: tutup sidebar di HP.
   useEffect(() => {
@@ -52,6 +58,8 @@ export default function Layout({ children }) {
 
   const kelas = ({ isActive }) => 'menu-item' + (isActive ? ' aktif' : '');
   const judul = JUDUL[lokasi.pathname] || 'Peta Rawan Kriminalitas';
+  const diStatistik = lokasi.pathname.startsWith('/detail-kasus');
+  const adalahAdmin = sesi?.pengguna.peran === 'admin';
 
   return (
     <div className={`app-shell${ringkas ? ' ringkas' : ''}${terbuka ? ' terbuka' : ''}`}>
@@ -87,12 +95,39 @@ export default function Layout({ children }) {
             <span className="teks">Peta Rawan Kriminalitas</span>
           </NavLink>
 
+          {/* Statistik Kriminalitas: tombol yang membuka submenu Grafik & Tabel */}
+          <button
+            type="button"
+            className={'menu-item' + (diStatistik ? ' aktif' : '')}
+            onClick={() => setStatBuka(!statBuka)}
+            title="Statistik Kriminalitas"
+          >
+            <Ikon nama="data" />
+            <span className="teks">Statistik Kriminalitas</span>
+          </button>
+          {statBuka && (
+            <div className="submenu teks">
+              <NavLink to="/detail-kasus-grafik" className={kelas}>Grafik</NavLink>
+              <NavLink to="/detail-kasus-tabel" className={kelas}>Tabel</NavLink>
+            </div>
+          )}
+
           <div className="menu-grup teks">Pengelola</div>
           {sesi ? (
             <>
-              <NavLink to="/admin" className={kelas} title="Kelola Data">
+              <NavLink to="/admin" end className={kelas} title="Kelola Data">
                 <Ikon nama="data" />
                 <span className="teks">Kelola Data</span>
+              </NavLink>
+              {adalahAdmin && (
+                <NavLink to="/admin/pengguna" className={kelas} title="Kelola Admin">
+                  <Ikon nama="data" />
+                  <span className="teks">Kelola Admin</span>
+                </NavLink>
+              )}
+              <NavLink to="/admin/profil" className={kelas} title="Profil">
+                <Ikon nama="masuk" />
+                <span className="teks">Profil</span>
               </NavLink>
               <button type="button" className="menu-item" onClick={keluar} title="Keluar">
                 <Ikon nama="keluar" />
