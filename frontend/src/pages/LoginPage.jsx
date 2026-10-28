@@ -23,6 +23,7 @@ export default function LoginPage() {
       await login(username.trim(), password);
       navigate(lokasi.state?.dari || '/admin', { replace: true });
     } catch (err) {
+      // 429: terlalu banyak percobaan gagal; pesan dari server sudah memuat lama tunggu.
       setGalat(
         err.status === 401 ? 'Nama pengguna atau kata sandi salah. Coba lagi.' : err.message
       );
@@ -77,8 +78,8 @@ export default function LoginPage() {
             <button className="btn btn-primary w-100" type="submit" disabled={proses}>
               {proses ? 'Memeriksa…' : 'Masuk'}
             </button>
-            <div className="text-center mt-3">
-              Belum punya akun? <Link to="/daftar">Daftar</Link>
+            <div className="text-center mt-3 small text-secondary">
+              Belum punya akun? Minta admin membuatkannya lewat menu Kelola Admin.
             </div>
             <div className="text-center mt-2">
               <Link to="/">← Kembali ke dashboard</Link>
@@ -88,4 +89,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
+}

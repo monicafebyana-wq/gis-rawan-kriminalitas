@@ -61,3 +61,17 @@ def rekap_per_polsek(conn: psycopg.Connection, tahun: int, jenis: list[int] | No
     sql = _SQL_REKAP.format(kolom_geom=_KOLOM_GEOM if dengan_geom else "",
                             urut="total_semua_jenis DESC, id_polsek" if urut_kasus else "id_polsek")
     return conn.execute(sql, {"tahun": tahun, "jenis": jenis, "polsek": polsek, "zona": zona}).fetchall()
+
+
+def fitur_geojson(rows: list[dict], tahun: int) -> list[dict]:
+    """Baris rekap_per_polsek -> daftar Feature GeoJSON (dipakai /polsek dan /spasial/bbox)."""
+    return [{
+        "type": "Feature",
+        "geometry": r.get("geometri"),          # None bila poligon belum diimpor / tidak diminta
+        "properties": {
+            "id_polsek": r["id_polsek"], "nama_polsek": r["nama_polsek"], "tahun": tahun,
+            "total_kasus": r["total_kasus"], "total_semua_jenis": r["total_semua_jenis"],
+            "kategori_zona": r["kategori_zona"],
+            "pusat": None if r.get("pusat_lat") is None else {"lat": round(r["pusat_lat"], 5), "lng": round(r["pusat_lng"], 5)},
+        },
+    } for r in rows]

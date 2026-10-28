@@ -13,6 +13,14 @@ from app.main import app  # noqa: E402
 from tests.konstanta import PASSWORD_UJI, TAHUN_UJI  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def reset_ratelimit():
+    """Hitungan login gagal dikosongkan sebelum tiap tes agar tes tidak saling memblokir."""
+    from app import ratelimit
+    ratelimit.reset_semua()
+    yield
+
+
 @pytest.fixture(scope="session")
 def client():
     with TestClient(app) as c:        # `with` -> lifespan (pool DB) ikut jalan
@@ -60,6 +68,7 @@ def akun_uji(db_hidup):
                       (nama, security.hash_password(PASSWORD_UJI), peran))
     yield
     with psycopg.connect(conninfo(), autocommit=True) as c:
+        c.execute("DELETE FROM audit_log WHERE username LIKE 'uji\\_%'")
         c.execute("DELETE FROM pengguna WHERE username LIKE 'uji\\_%'")
 
 

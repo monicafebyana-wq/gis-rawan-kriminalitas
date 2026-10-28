@@ -16,6 +16,9 @@ const JUDUL = {
   '/admin/tambah-data': 'Tambah Data',
   '/admin/ubah-data': 'Ubah Data',
   '/admin/profil': 'Profil',
+  '/admin/titik': 'Titik Kejadian',
+  '/admin/master': 'Master Data',
+  '/admin/audit': 'Riwayat Perubahan',
   '/admin/pengguna': 'Kelola Admin',
   '/login': 'Masuk Admin',
 };
@@ -119,11 +122,25 @@ export default function Layout({ children }) {
                 <Ikon nama="data" />
                 <span className="teks">Kelola Data</span>
               </NavLink>
+              <NavLink to="/admin/titik" className={kelas} title="Titik Kejadian">
+                <Ikon nama="titik" />
+                <span className="teks">Titik Kejadian</span>
+              </NavLink>
               {adalahAdmin && (
-                <NavLink to="/admin/pengguna" className={kelas} title="Kelola Admin">
-                  <Ikon nama="data" />
-                  <span className="teks">Kelola Admin</span>
-                </NavLink>
+                <>
+                  <NavLink to="/admin/master" className={kelas} title="Master Data">
+                    <Ikon nama="pengaturan" />
+                    <span className="teks">Master Data</span>
+                  </NavLink>
+                  <NavLink to="/admin/audit" className={kelas} title="Riwayat Perubahan">
+                    <Ikon nama="riwayat" />
+                    <span className="teks">Riwayat Perubahan</span>
+                  </NavLink>
+                  <NavLink to="/admin/pengguna" className={kelas} title="Kelola Admin">
+                    <Ikon nama="pengguna" />
+                    <span className="teks">Kelola Admin</span>
+                  </NavLink>
+                </>
               )}
               <NavLink to="/admin/profil" className={kelas} title="Profil">
                 <Ikon nama="masuk" />

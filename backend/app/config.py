@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     jwt_secret: str = "ganti_dengan_string_acak"
     jwt_berlaku_detik: int = 86400
     bcrypt_rounds: int = 12          # makin tinggi makin aman tapi makin lambat (tes memakai 4)
+    login_maks_gagal: int = 5        # login gagal per (IP + username) sebelum diblokir sementara (HTTP 429)
+    login_maks_gagal_ip: int = 30    # login gagal per IP (semua username)
+    login_jendela_detik: int = 900   # lama hitungan & blokir (15 menit)
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -42,12 +42,15 @@ backend/
 │  │  └─ impor_csv.py  # baca + validasi CSV rekap (nomor baris di setiap error), simpan ke DB
 │  └─ routers/         # satu file per kelompok endpoint
 │     ├─ health.py  referensi.py   # SUDAH JALAN: /health, /jenis, /tahun
-│     ├─ polsek.py                 # SUDAH JALAN: /polsek (GeoJSON), /polsek/{id}
+│     ├─ polsek.py                 # SUDAH JALAN: /polsek (GeoJSON), /polsek/{id}; admin: tambah/ubah/hapus Polsek, unggah poligon
 │     ├─ kasus.py                  # SUDAH JALAN: GET, POST, PUT, DELETE
 │     ├─ statistik.py              # SUDAH JALAN: /statistik, /statistik/tren
 │     ├─ auth.py                   # SUDAH JALAN: /auth/login, /auth/me, /auth/ubah-password
 │     ├─ pengguna.py               # SUDAH JALAN: /pengguna (daftar/tambah/ubah/hapus akun, khusus admin)
-│     └─ laporan.py                # /import/csv sudah jalan; TODO: /export (33)
+│     ├─ audit.py                  # SUDAH JALAN: GET /audit (riwayat perubahan, khusus admin)
+│     ├─ titik.py                  # SUDAH JALAN: /heatmap (publik), /titik (CRUD + impor CSV)
+│     ├─ spasial.py                # SUDAH JALAN: /spasial/titik, /terdekat, /bbox (PostGIS)
+│     └─ laporan.py                # SUDAH JALAN: /import/csv, /export (csv/xlsx)
 ├─ db/
 │  ├─ migrations/      # skema + fungsi zonasi + seed jenis (run.sh)
 │  └─ seed/            # impor CSV bersih + verifikasi (import.sh)
@@ -63,6 +66,7 @@ Endpoint `GET` bersifat publik. Yang mengubah data butuh login:
 |---|:-:|:-:|
 | `POST /api/kasus`, `PUT /api/kasus/{id}`, `POST /api/import/csv` | ✅ | ✅ |
 | `DELETE /api/kasus/{id}` | ❌ 403 | ✅ |
+| `POST/PUT/DELETE /api/polsek`, `/api/jenis`, `POST /api/polsek/geojson`, `PUT /api/polsek/{id}/poligon`, `GET /api/audit` | ❌ 403 | ✅ |
 | `GET/POST /api/pengguna`, `PUT/DELETE /api/pengguna/{id}` (kelola akun) | ❌ 403 | ✅ |
 | `POST /api/auth/ubah-password` (ganti password sendiri) | ✅ | ✅ |
 
@@ -92,6 +96,21 @@ PUT  /api/pengguna/{id}   {"peran": "operator", "password": "reset-baru-123"}   
 DELETE /api/pengguna/{id}
 ```
 Pengaman: tidak bisa menghapus akun sendiri, dan sistem menolak aksi yang membuat admin habis (`409 AKSI_DITOLAK`).
+
+## Fitur tambahan
+**Migrasi baru:** jalankan `docker exec gis_kriminalitas_db sh /migrations/run.sh` (menerapkan `004_audit_log.sql`) dan `pip install -r requirements-dev.txt` (paket baru: openpyxl).
+
+- **Ekspor:** `GET /api/export?format=csv|xlsx&tahun=&jenis=&polsek=` (publik). Kolom CSV sama dengan format impor (+ `Total`, `Zona` yang diabaikan saat impor ulang); XLSX berwarna per zona + baris TOTAL. Header `Content-Disposition` sudah di-expose untuk CORS.
+- **Master data (admin):** `POST/PUT/DELETE /api/polsek` dan `/api/jenis`. Polsek yang masih punya kasus dan 18 jenis baku (dipakai impor CSV) tidak bisa dihapus -> `409`. Jenis baru diisi per kasus, bukan lewat impor CSV.
+- **Poligon (admin):** `POST /api/polsek/geojson` (form-data `file`, `dry_run`) atau `PUT /api/polsek/{id}/poligon`. Validasi sama dengan `import_poligon.sql` (geometri diperbaiki otomatis, kotak wilayah, luas, tumpang tindih); gagal = tidak ada yang tersimpan. **Pakai `dry_run=true` dulu.**
+- **Audit log:** `GET /api/audit?entitas=&aksi=&username=&dari=&sampai=&page=&limit=` (admin). Mencatat tambah/ubah/hapus kasus, akun, Polsek, jenis, poligon, impor CSV, ganti password. Password tidak pernah dicatat.
+- **Spasial (publik):** `GET /api/spasial/titik?lat=&lng=` (titik masuk wilayah mana; di luar wilayah -> Polsek terdekat + jarak), `/spasial/terdekat?lat=&lng=&limit=&radius_m=`, `/spasial/bbox?min_lng=&min_lat=&max_lng=&max_lat=&geometri=` (GeoJSON).
+- **Titik kejadian & heatmap:** tabel `titik_kejadian` (lat/lng per kejadian), **terpisah** dari rekap kasus -> tidak mengubah jumlah kasus/zona. Butuh migrasi `005_titik_kejadian.sql`.
+  - `GET /api/heatmap?tahun=&dari=&sampai=&jenis=&polsek=&grid=0.002` (publik) -> `{"grid_derajat", "total_titik", "maks_bobot", "data": [{"lat", "lng", "bobot"}]}`. Titik dirangkum per sel grid (0.001 derajat ~ 110 m, minimum 0.0005), jadi koordinat persis tidak dibuka ke publik. `bobot / maks_bobot` = intensitas untuk Leaflet.heat. Tanpa `tahun` = semua tahun.
+  - `GET /api/titik` (login) daftar titik persis; `POST /api/titik` `{"lat", "lng", "id_jenis", "tanggal"}` (operator/admin); `PUT /api/titik/{id}` (semua field boleh diubah); `DELETE` (admin). `id_polsek` otomatis dari poligon (null bila di luar wilayah).
+  - `POST /api/titik/import` (form-data `file`, `dry_run`): CSV dengan kolom `lat, lng, jenis, tanggal`. `jenis` boleh kode (`CURAT`), nama, atau id; tanggal `YYYY-MM-DD` atau `DD/MM/YYYY`; pemisah `,` atau `;` (dengan `;` koma dibaca desimal). Semua baris valid atau tidak ada yang tersimpan. Maks 5 MB / 20.000 baris.
+  - Koordinat divalidasi masuk kotak wilayah (lng 107.2-108.2, lat -7.6 s/d -6.6) untuk menangkap lat/lng tertukar.
+- **Batas login:** 5 gagal per (IP + username) atau 30 gagal per IP dalam 15 menit -> `429 TERLALU_BANYAK_PERCOBAAN` + header `Retry-After`. Diatur lewat `LOGIN_MAKS_GAGAL`, `LOGIN_MAKS_GAGAL_IP`, `LOGIN_JENDELA_DETIK` di `.env`. Hitungan disimpan di memori (cukup untuk 1 worker). Di belakang reverse proxy, jalankan uvicorn dengan `--proxy-headers` agar IP yang terbaca IP klien asli.
 
 ## Impor CSV & CRUD kasus
 - `PUT /api/kasus/{id}` boleh mengubah **semua field** (`id_polsek`, `id_jenis`, `tahun`, `jumlah`); kirim hanya yang berubah. Kombinasi polsek+jenis+tahun yang bentrok -> `409`; zona tahun lama & baru dihitung ulang.

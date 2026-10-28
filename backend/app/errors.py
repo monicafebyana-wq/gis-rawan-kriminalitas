@@ -7,8 +7,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 class ApiError(Exception):
-    def __init__(self, status: int, kode: str, pesan: str, detail: list | None = None):
-        self.status, self.kode, self.pesan, self.detail = status, kode, pesan, detail or []
+    def __init__(self, status: int, kode: str, pesan: str, detail: list | None = None, headers: dict | None = None):
+        self.status, self.kode, self.pesan, self.detail, self.headers = status, kode, pesan, detail or [], headers
 
 
 def tidak_ditemukan(pesan: str) -> ApiError:
@@ -23,14 +23,14 @@ def belum_diimplementasi(nama: str) -> ApiError:
     return ApiError(501, "BELUM_DIIMPLEMENTASI", f"Endpoint {nama} belum dikerjakan")
 
 
-def _respons(status: int, kode: str, pesan: str, detail: list) -> JSONResponse:
-    return JSONResponse(status_code=status, content={"error": {"kode": kode, "pesan": pesan, "detail": detail}})
+def _respons(status: int, kode: str, pesan: str, detail: list, headers: dict | None = None) -> JSONResponse:
+    return JSONResponse(status_code=status, content={"error": {"kode": kode, "pesan": pesan, "detail": detail}}, headers=headers)
 
 
 def daftar_handler(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, e: ApiError):
-        return _respons(e.status, e.kode, e.pesan, e.detail)
+        return _respons(e.status, e.kode, e.pesan, e.detail, e.headers)
 
     @app.exception_handler(RequestValidationError)
     async def _validasi(_: Request, e: RequestValidationError):

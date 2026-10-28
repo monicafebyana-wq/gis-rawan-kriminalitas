@@ -390,3 +390,20 @@ html { scroll-behavior: smooth; }
 .submenu { padding-left: 2.25rem; }
 .submenu .menu-item { font-size: .9rem; padding: .3rem .75rem; }
 .app-shell.ringkas .submenu { display: none; }
+/* ---------- Heatmap, cek lokasi, pemilih titik ---------- */
+.leaflet-heatmap-layer { pointer-events: none; } /* kanvas heatmap tidak boleh menghalangi klik poligon */
+.peta-cek { cursor: crosshair !important; }
+.peta-pilih {
+  height: 240px;
+  border: 1px solid var(--kopi-garis);
+  border-radius: 12px;
+  background: #e9e2d3;
+  z-index: 0;
+}
+.legenda-heat {
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #20a99b, #ffc800, #ff3131);
+}
+.detail-audit { max-width: 360px; }
+.detail-audit pre { white-space: pre-wrap; word-break: break-word; font-size: 0.75rem; margin: 0.25rem 0 0; }

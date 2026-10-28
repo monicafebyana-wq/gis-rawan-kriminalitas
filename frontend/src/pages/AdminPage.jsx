@@ -41,6 +41,18 @@ export default function AdminPage() {
   // Ekspor CSV
   const [sedangEkspor, setSedangEkspor] = useState(false);
 
+  // Unduh rekap dari server (Polsek x jenis, CSV / XLSX)
+  async function unduhRekap(format) {
+    if (!filter.tahun) return;
+    setPesan(null);
+    try {
+      const nama = await api.unduhRekap(format, filter);
+      setPesan({ tipe: 'success', teks: `Rekap diunduh: ${nama}` });
+    } catch (err) {
+      setPesan({ tipe: 'danger', teks: `Gagal mengunduh rekap: ${err.message}` });
+    }
+  }
+
   // Impor CSV
   const [berkas, setBerkas] = useState(null);
   const [tahunImpor, setTahunImpor] = useState('');
@@ -211,9 +223,14 @@ export default function AdminPage() {
             {!adalahAdmin && ' · boleh menambah dan mengubah, tidak boleh menghapus'}
           </div>
         </div>
-        <button type="button" className="btn btn-outline-secondary btn-sm" onClick={logout}>
-          Keluar
-        </button>
+        <div className="d-flex flex-wrap gap-2">
+          <Link to="/admin/titik" className="btn btn-outline-primary btn-sm">Titik kejadian</Link>
+          {adalahAdmin && <Link to="/admin/master" className="btn btn-outline-primary btn-sm">Master data</Link>}
+          {adalahAdmin && <Link to="/admin/audit" className="btn btn-outline-primary btn-sm">Riwayat</Link>}
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={logout}>
+            Keluar
+          </button>
+        </div>
       </div>
 
       {pesan && (
@@ -231,14 +248,30 @@ export default function AdminPage() {
               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                 <h2 className="h5 mb-0">Data kasus</h2>
                 <div className="d-flex gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    disabled={sedangEkspor || !filter.tahun}
-                    onClick={ekspor}
-                  >
-                    {sedangEkspor ? 'Mengekspor…' : 'Ekspor CSV'}
-                  </button>
+                  <div className="btn-group btn-group-sm">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      disabled={sedangEkspor || !filter.tahun}
+                      onClick={ekspor}
+                    >
+                      {sedangEkspor ? 'Mengekspor…' : 'Ekspor CSV'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      disabled={!filter.tahun}
+                    >
+                      <span className="visually-hidden">Pilihan ekspor lain</span>
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end">
+                      <li><h6 className="dropdown-header">Rekap per Polsek (format impor)</h6></li>
+                      <li><button type="button" className="dropdown-item" onClick={() => unduhRekap('csv')}>Rekap CSV</button></li>
+                      <li><button type="button" className="dropdown-item" onClick={() => unduhRekap('xlsx')}>Rekap Excel (XLSX)</button></li>
+                    </ul>
+                  </div>
                   <Link
                     to="/admin/tambah-data"
                     state={{ tahun: filter.tahun }}

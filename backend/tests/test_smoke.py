@@ -19,10 +19,10 @@ def test_tahun(client, db_hidup):
     assert j["terbaru"] == max(j["data"])
 
 
-def test_endpoint_belum_dikerjakan_pakai_format_error(client, db_hidup):
-    r = client.get("/api/export")                       # ekspor laporan belum dikerjakan (tugas 33)
-    assert r.status_code == 501
-    assert r.json()["error"]["kode"] == "BELUM_DIIMPLEMENTASI"
+def test_endpoint_tidak_ada_pakai_format_error(client, db_hidup):
+    r = client.get("/api/tidak-ada")                    # /api/export sudah diimplementasi; yang tidak dikenal tetap berformat error kontrak
+    assert r.status_code == 404
+    assert r.json()["error"]["kode"] == "TIDAK_DITEMUKAN"
 
 
 def test_validasi_tahun_bukan_angka(client, db_hidup):

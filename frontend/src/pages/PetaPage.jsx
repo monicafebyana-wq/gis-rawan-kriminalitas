@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, CircleMarker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet.heat'; // harus SESUDAH leaflet: menambah L.heatLayer
 import 'leaflet/dist/leaflet.css';
 import { api } from '../api.js';
 
 // Halaman Peta (/peta): bilah filter di atas, peta besar di kiri, panel Kontrol Layer + Keterangan Zona di kanan.
 // Poligon diwarnai menurut zona; klik poligon untuk melihat rincian jenis kejahatan.
+// Lapisan tambahan: heatmap titik kejadian (GET /api/heatmap) dan alat Cek lokasi (GET /api/spasial/titik).
 
 const WARNA = { tinggi: '#FF3131', sedang: '#FFC800', rendah: '#20A99B' };
 const LABEL = { tinggi: 'Tinggi', sedang: 'Sedang', rendah: 'Rendah' };
@@ -51,6 +53,43 @@ function PasKanPeta({ data }) {
   return null;
 }
 
+// Heatmap titik kejadian. `data` = respons /api/heatmap; titik sudah dirangkum per sel grid, bobot = jumlah kejadian.
+function LapisanHeat({ data, radius }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!data || data.data.length === 0) return undefined;
+    const lapisan = L.heatLayer(
+      data.data.map((d) => [d.lat, d.lng, d.bobot]),
+      {
+        radius,
+        blur: Math.round(radius * 0.8),
+        max: Math.max(data.maks_bobot, 3), // data jarang (bobot 1-2) tidak langsung merah semua
+        minOpacity: 0.35,
+        gradient: { 0.2: '#20A99B', 0.55: '#FFC800', 1: '#FF3131' },
+      }
+    ).addTo(map);
+    return () => {
+      map.removeLayer(lapisan);
+    };
+  }, [data, radius, map]);
+  return null;
+}
+
+// Alat Cek lokasi: saat aktif, klik di peta diteruskan ke `onKlik`.
+function KlikPeta({ aktif, onKlik }) {
+  const map = useMap();
+  useMapEvents({
+    click: (e) => {
+      if (aktif) onKlik(e.latlng);
+    },
+  });
+  // Props MapContainer (mis. className) hanya dibaca saat peta dibuat, jadi kursor crosshair dipasang langsung ke elemen peta.
+  useEffect(() => {
+    map.getContainer().classList.toggle('peta-cek', aktif);
+  }, [aktif, map]);
+  return null;
+}
+
 // Isi popup: rincian jenis kejahatan satu Polsek.
 function isiPopup(d) {
   const baris = d.rincian_jenis
@@ -84,6 +123,18 @@ export default function PetaPage() {
   const opasitasRef = useRef(0.7); // dibaca gayaPoligon, supaya tidak ketinggalan nilai lama
   const geoRef = useRef(null);
 
+  // Lapisan tambahan
+  const [zonaTampil, setZonaTampil] = useState(true); // warna zona
+  const zonaRef = useRef(true);
+  const [heatAktif, setHeatAktif] = useState(false);
+  const [heat, setHeat] = useState(null); // respons /api/heatmap
+  const [heatStatus, setHeatStatus] = useState('diam'); // diam | memuat | ok | gagal
+  const [radiusHeat, setRadiusHeat] = useState(25);
+  const [cekAktif, setCekAktif] = useState(false);
+  const [cek, setCek] = useState(null); // { lat, lng, hasil | galat }
+  const [sedangUnduh, setSedangUnduh] = useState('');
+  const [galatUnduh, setGalatUnduh] = useState('');
+
   // Sekali di awal: isi pilihan filter.
   useEffect(() => {
     Promise.all([api.tahun(), api.jenis(), api.polsek()])
@@ -115,6 +166,49 @@ export default function PetaPage() {
         setStatus('gagal');
       });
   }, [terapkan]);
+
+  // Heatmap: ikut filter tahun, jenis, dan polsek yang sedang diterapkan (filter zona tidak berlaku untuk titik).
+  useEffect(() => {
+    if (!heatAktif || !terapkan.tahun) return undefined;
+    let batal = false;
+    setHeatStatus('memuat');
+    api
+      .heatmap({ tahun: terapkan.tahun, jenis: terapkan.jenis, polsek: terapkan.polsek, grid: 0.002 })
+      .then((r) => {
+        if (batal) return;
+        setHeat(r);
+        setHeatStatus('ok');
+      })
+      .catch(() => {
+        if (!batal) setHeatStatus('gagal');
+      });
+    return () => {
+      batal = true;
+    };
+  }, [heatAktif, terapkan]);
+
+  async function cekLokasi(ll) {
+    const titik = { lat: ll.lat, lng: ll.lng };
+    setCek({ ...titik, memuat: true });
+    try {
+      const r = await api.spasialTitik({ lat: ll.lat.toFixed(6), lng: ll.lng.toFixed(6), tahun: terapkan.tahun });
+      setCek({ ...titik, hasil: r });
+    } catch (e) {
+      setCek({ ...titik, galat: e.message });
+    }
+  }
+
+  async function unduhRekap(format) {
+    setSedangUnduh(format);
+    setGalatUnduh('');
+    try {
+      await api.unduhRekap(format, { tahun: terapkan.tahun, jenis: terapkan.jenis, polsek: terapkan.polsek });
+    } catch (e) {
+      setGalatUnduh(e.message);
+    } finally {
+      setSedangUnduh('');
+    }
+  }
 
   const hitungZona = useMemo(() => {
     const h = { tinggi: 0, sedang: 0, rendah: 0 };
@@ -148,11 +242,17 @@ export default function PetaPage() {
   }
 
   const gayaPoligon = (feature) => ({
-    color: '#ffffff',
+    color: zonaRef.current ? '#ffffff' : '#7a5c3a',
     weight: 1.5,
     fillColor: WARNA[feature.properties.kategori_zona] || '#9aa3af',
-    fillOpacity: opasitasRef.current,
+    fillOpacity: zonaRef.current ? opasitasRef.current : 0.03, // hampir transparan tapi tetap bisa diklik
   });
+
+  function ubahZonaTampil(nilai) {
+    setZonaTampil(nilai);
+    zonaRef.current = nilai;
+    if (geoRef.current) geoRef.current.setStyle(gayaPoligon);
+  }
 
   function ubahOpasitas(nilai) {
     const n = Number(nilai);
@@ -166,7 +266,7 @@ export default function PetaPage() {
     layer.bindTooltip(`${p.nama_polsek} · ${p.total_kasus} kasus`, { sticky: true });
     layer.bindPopup('<div class="text-secondary">Memuat rincian…</div>', { maxWidth: 300 });
     layer.on({
-      mouseover: () => layer.setStyle({ weight: 3, fillOpacity: 0.85 }),
+      mouseover: () => layer.setStyle({ weight: 3, fillOpacity: zonaRef.current ? 0.85 : 0.15 }),
       mouseout: () => layer.setStyle(gayaPoligon(feature)),
       click: () => {
         api
@@ -315,9 +415,19 @@ export default function PetaPage() {
                 />
               )}
               <PasKanPeta data={data} />
+              {heatAktif && heat && <LapisanHeat data={heat} radius={radiusHeat} />}
+              <KlikPeta aktif={cekAktif} onKlik={cekLokasi} />
+              {cek && (
+                <CircleMarker
+                  center={[cek.lat, cek.lng]}
+                  radius={7}
+                  pathOptions={{ color: '#2a1b13', weight: 2, fillColor: '#c4601a', fillOpacity: 0.9 }}
+                />
+              )}
             </MapContainer>
 
             {status === 'memuat' && <div className="peta-memuat">Memuat peta…</div>}
+            {heatStatus === 'memuat' && status !== 'memuat' && <div className="peta-memuat">Memuat heatmap…</div>}
           </div>
         </div>
 
@@ -342,7 +452,13 @@ export default function PetaPage() {
                 </div>
               ))}
 
-              <label className="form-label fw-semibold small mt-3 mb-0" htmlFor="opasitas">
+              <div className="fw-semibold small mt-3 mb-1">Lapisan</div>
+              <div className="form-check form-switch">
+                <input className="form-check-input" type="checkbox" role="switch" id="lap-zona"
+                  checked={zonaTampil} onChange={(e) => ubahZonaTampil(e.target.checked)} />
+                <label className="form-check-label" htmlFor="lap-zona">Warna zona kerawanan</label>
+              </div>
+              <label className="form-label small mt-2 mb-0" htmlFor="opasitas">
                 Kepekatan warna zona: {opasitas}%
               </label>
               <input
@@ -353,8 +469,94 @@ export default function PetaPage() {
                 max="100"
                 step="5"
                 value={opasitas}
+                disabled={!zonaTampil}
                 onChange={(e) => ubahOpasitas(e.target.value)}
               />
+
+              <div className="form-check form-switch mt-2">
+                <input className="form-check-input" type="checkbox" role="switch" id="lap-heat"
+                  checked={heatAktif} onChange={(e) => setHeatAktif(e.target.checked)} />
+                <label className="form-check-label" htmlFor="lap-heat">Heatmap titik kejadian</label>
+              </div>
+              {heatAktif && (
+                <div className="mt-2">
+                  <div className="legenda-heat" aria-hidden="true" />
+                  <div className="d-flex justify-content-between small text-secondary">
+                    <span>sedikit</span>
+                    <span>banyak</span>
+                  </div>
+                  <label className="form-label small mt-2 mb-0" htmlFor="radius-heat">
+                    Radius sebaran: {radiusHeat} px
+                  </label>
+                  <input id="radius-heat" type="range" className="form-range" min="10" max="50" step="5"
+                    value={radiusHeat} onChange={(e) => setRadiusHeat(Number(e.target.value))} />
+                  <div className="small text-secondary">
+                    {heatStatus === 'gagal' && <span className="text-danger">Heatmap gagal dimuat.</span>}
+                    {heatStatus === 'ok' && heat && heat.total_titik === 0 && (
+                      <>Belum ada titik kejadian untuk filter ini (tahun {terapkan.tahun}).</>
+                    )}
+                    {heatStatus === 'ok' && heat && heat.total_titik > 0 && (
+                      <>
+                        <strong>{heat.total_titik}</strong> titik kejadian tahun {terapkan.tahun}, dirangkum per sel
+                        ±{Math.round(heat.grid_derajat * 111000)} m. Jumlahnya bisa berbeda dari rekap kasus.
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="form-check form-switch mt-2">
+                <input className="form-check-input" type="checkbox" role="switch" id="lap-cek"
+                  checked={cekAktif} onChange={(e) => { setCekAktif(e.target.checked); if (!e.target.checked) setCek(null); }} />
+                <label className="form-check-label" htmlFor="lap-cek">Cek lokasi (klik di peta)</label>
+              </div>
+              {cekAktif && (
+                <div className="small mt-2" aria-live="polite">
+                  {!cek && <span className="text-secondary">Klik satu titik di peta untuk tahu wilayah Polsek-nya.</span>}
+                  {cek && cek.memuat && <span className="text-secondary">Memeriksa…</span>}
+                  {cek && cek.galat && <span className="text-danger">{cek.galat}</span>}
+                  {cek && cek.hasil && (
+                    <>
+                      <div className="text-secondary">{cek.lat.toFixed(5)}, {cek.lng.toFixed(5)}</div>
+                      {cek.hasil.polsek ? (
+                        <>
+                          <div>
+                            {cek.hasil.di_dalam_wilayah ? 'Wilayah ' : 'Di luar batas wilayah. Terdekat: '}
+                            <strong>Polsek {cek.hasil.polsek.nama_polsek}</strong>
+                            {!cek.hasil.di_dalam_wilayah && ` (± ${(cek.hasil.polsek.jarak_meter / 1000).toFixed(1)} km)`}
+                          </div>
+                          <div>
+                            <span className={`dot dot-${cek.hasil.polsek.kategori_zona}`} /> Zona {LABEL[cek.hasil.polsek.kategori_zona]} ·{' '}
+                            {cek.hasil.polsek.total_kasus} kasus ({cek.hasil.tahun})
+                          </div>
+                        </>
+                      ) : (
+                        <div>Belum ada poligon wilayah yang tersimpan.</div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-body">
+              <h2>Unduh rekap</h2>
+              <p className="small text-secondary mb-2">
+                Tabel Polsek × jenis kejahatan, tahun {terapkan.tahun || '…'}, mengikuti filter jenis dan wilayah di atas.
+              </p>
+              <div className="d-flex gap-2">
+                <button type="button" className="btn btn-outline-secondary btn-sm" disabled={!!sedangUnduh || !terapkan.tahun}
+                  onClick={() => unduhRekap('csv')}>
+                  {sedangUnduh === 'csv' ? 'Mengunduh…' : 'CSV'}
+                </button>
+                <button type="button" className="btn btn-outline-secondary btn-sm" disabled={!!sedangUnduh || !terapkan.tahun}
+                  onClick={() => unduhRekap('xlsx')}>
+                  {sedangUnduh === 'xlsx' ? 'Mengunduh…' : 'Excel (XLSX)'}
+                </button>
+              </div>
+              {galatUnduh && <div className="small text-danger mt-2">{galatUnduh}</div>}
             </div>
           </div>
 

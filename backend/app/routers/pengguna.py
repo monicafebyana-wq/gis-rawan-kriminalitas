@@ -18,6 +18,7 @@ from app import security
 from app.db import Conn
 from app.deps import Admin
 from app.errors import ApiError, tidak_ditemukan, validasi_gagal
+from app.services import audit
 
 router = APIRouter(prefix="/pengguna", tags=["Pengguna"])
 
@@ -65,6 +66,7 @@ def tambah_pengguna(body: PenggunaBaru, conn: Conn, user: Admin):
         (body.username, security.hash_password(body.password), body.peran)).fetchone()
     if row is None:
         raise ApiError(409, "DATA_SUDAH_ADA", f"Username '{body.username}' sudah dipakai")
+    audit.catat(conn, user, "tambah", "pengguna", row["id_pengguna"], {"username": row["username"], "peran": row["peran"]})
     return row
 
 
@@ -75,7 +77,7 @@ def ubah_pengguna(id_pengguna: int, body: PenggunaUbah, conn: Conn, user: Admin)
     if body.password is not None:
         _cek_password(body.password)
     _kunci_admin(conn)
-    target = conn.execute("SELECT peran FROM pengguna WHERE id_pengguna = %s FOR UPDATE", (id_pengguna,)).fetchone()
+    target = conn.execute("SELECT username, peran FROM pengguna WHERE id_pengguna = %s FOR UPDATE", (id_pengguna,)).fetchone()
     if target is None:
         raise tidak_ditemukan(f"Pengguna dengan id {id_pengguna} tidak ditemukan")
     peran = body.peran or target["peran"]
@@ -86,6 +88,8 @@ def ubah_pengguna(id_pengguna: int, body: PenggunaUbah, conn: Conn, user: Admin)
         row = conn.execute(f"UPDATE pengguna SET peran = %s WHERE id_pengguna = %s RETURNING {_KOLOM}",
                            (peran, id_pengguna)).fetchone()
     _harus_ada_admin(conn)                       # gagal -> rollback otomatis
+    audit.catat(conn, user, "ubah", "pengguna", id_pengguna, {"username": row["username"], "peran_sebelum": target["peran"],
+                                                            "peran_sesudah": row["peran"], "reset_password": body.password is not None})
     return row
 
 
@@ -94,8 +98,9 @@ def hapus_pengguna(id_pengguna: int, conn: Conn, user: Admin):
     if id_pengguna == user["id_pengguna"]:
         raise ApiError(409, "AKSI_DITOLAK", "Tidak bisa menghapus akun sendiri")
     _kunci_admin(conn)
-    row = conn.execute("DELETE FROM pengguna WHERE id_pengguna = %s RETURNING id_pengguna", (id_pengguna,)).fetchone()
+    row = conn.execute("DELETE FROM pengguna WHERE id_pengguna = %s RETURNING username, peran", (id_pengguna,)).fetchone()
     if row is None:
         raise tidak_ditemukan(f"Pengguna dengan id {id_pengguna} tidak ditemukan")
     _harus_ada_admin(conn)
+    audit.catat(conn, user, "hapus", "pengguna", id_pengguna, {"username": row["username"], "peran": row["peran"]})
     return Response(status_code=204)

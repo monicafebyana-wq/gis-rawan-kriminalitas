@@ -69,8 +69,13 @@ export default function EditKasusPage() {
 
     setSedangSimpan(true);
     try {
-      await api.ubahKasus(sesi.token, kasus.id_kasus, perubahan);
-      navigate('/admin', { replace: true, state: { pesan: 'Data berhasil diubah. Warna zona di peta ikut diperbarui.' } });
+      const r = await api.ubahKasus(sesi.token, kasus.id_kasus, perubahan);
+      const label = { id_polsek: 'Polsek', id_jenis: 'jenis', tahun: 'tahun', jumlah: 'jumlah' };
+      const diubah = (r.diubah || Object.keys(perubahan)).map((k) => label[k] || k).join(', ');
+      navigate('/admin', {
+        replace: true,
+        state: { pesan: `Data berhasil diubah (${diubah}). Warna zona di peta ikut diperbarui.` },
+      });
     } catch (err) {
       setGalat(pesanGalat(err));
     } finally {

@@ -9,6 +9,9 @@ import TambahKasusPage from './pages/TambahKasusPage.jsx';
 import EditKasusPage from './pages/EditKasusPage.jsx';
 import ProfilPage from './pages/ProfilPage.jsx';
 import PenggunaPage from './pages/PenggunaPage.jsx';
+import TitikPage from './pages/TitikPage.jsx';
+import MasterDataPage from './pages/MasterDataPage.jsx';
+import AuditPage from './pages/AuditPage.jsx';
 import { useAuth } from './auth.jsx';
 
 // Halaman yang hanya boleh dibuka setelah login.
@@ -20,7 +23,7 @@ function WajibLogin({ children }) {
 }
 
 // Rute publik: Dashboard, Peta, Statistik, Login.
-// Rute admin: Kelola Data, Tambah, Ubah, Profil, Kelola Admin.
+// Rute admin: Kelola Data, Tambah, Ubah, Titik Kejadian, Profil; khusus admin: Master Data, Riwayat Perubahan, Kelola Admin.
 // Pendaftaran umum ditutup: akun hanya dibuat admin lewat /admin/pengguna.
 export default function App() {
   return (
@@ -38,6 +41,9 @@ export default function App() {
         <Route path="/admin/tambah-data" element={<WajibLogin><TambahKasusPage /></WajibLogin>} />
         <Route path="/admin/ubah-data" element={<WajibLogin><EditKasusPage /></WajibLogin>} />
         <Route path="/admin/profil" element={<WajibLogin><ProfilPage /></WajibLogin>} />
+        <Route path="/admin/titik" element={<WajibLogin><TitikPage /></WajibLogin>} />
+        <Route path="/admin/master" element={<WajibLogin><MasterDataPage /></WajibLogin>} />
+        <Route path="/admin/audit" element={<WajibLogin><AuditPage /></WajibLogin>} />
         <Route path="/admin/pengguna" element={<WajibLogin><PenggunaPage /></WajibLogin>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -94,3 +94,14 @@ def test_ubah_bentrok_dan_tidak_valid(client, header, bersih_tahun_uji):
     r = client.put(f"/api/kasus/{a['id_kasus']}", json={"id_polsek": 99999}, headers=header["operator"])
     assert r.status_code == 400 and "id_polsek" in r.json()["error"]["detail"]
     assert client.put(f"/api/kasus/{a['id_kasus']}", json={"tahun": 1999}, headers=header["operator"]).status_code == 400
+
+
+def test_respons_ubah_menyebut_field_diubah_dan_diabaikan(client, header, bersih_tahun_uji):
+    k = client.post("/api/kasus", json=BARU, headers=header["operator"]).json()
+    # front end sering mengirim seluruh baris tabel: kolom yang bukan milik kasus (nama_polsek, id_kasus) diabaikan & dilaporkan
+    r = client.put(f"/api/kasus/{k['id_kasus']}", headers=header["operator"],
+                   json={"id_kasus": k["id_kasus"], "nama_polsek": "Soreang", "id_polsek": 2, "jumlah": 61})
+    j = r.json()
+    assert r.status_code == 200 and j["id_polsek"] == 2
+    assert j["diubah"] == ["id_polsek"] and j["diabaikan"] == ["id_kasus", "nama_polsek"]       # jumlah sama -> tidak dihitung berubah
+    assert client.put(f"/api/kasus/{k['id_kasus']}", json={"nama_polsek": "Soreang"}, headers=header["operator"]).status_code == 400

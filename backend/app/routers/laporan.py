@@ -1,12 +1,13 @@
-"""Impor CSV (operator/admin; sudah jalan) & ekspor laporan (TODO No 33). Lihat api-contract.md bagian 2.8 & 3.5."""
+"""Impor CSV (operator/admin) & ekspor laporan CSV/XLSX (publik). Lihat api-contract.md bagian 2.8 & 3.5."""
 from typing import Literal
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, Query, Response, UploadFile
 
 from app.db import Conn
 from app.deps import Pengguna
-from app.errors import belum_diimplementasi, validasi_gagal
-from app.services import impor_csv as impor_csv_svc, zonasi
+from app.errors import validasi_gagal
+from app.params import daftar_int
+from app.services import audit, ekspor as ekspor_svc, impor_csv as impor_csv_svc, rekap, zonasi
 
 router = APIRouter(tags=["Laporan"])
 
@@ -31,11 +32,26 @@ def impor_csv(
     if not dry_run:
         impor_csv_svc.simpan(conn, tahun, baris, mode)
         zonasi.refresh_zona(conn, tahun)
+        audit.catat(conn, user, "impor", "kasus", tahun, {"berkas": file.filename, "mode": mode, "baris": len(baris), "total_kasus": total})
         conn.commit()
     return {"tahun": tahun, "baris_dibaca": len(baris), "baris_valid": len(baris), "total_kasus": total,
             "peringatan": peringatan, "disimpan": not dry_run}
 
 
-@router.get("/export", summary="Ekspor ringkasan (csv)")
-def ekspor(conn: Conn, format: str = "csv", tahun: int | None = None, jenis: str | None = None, polsek: str | None = None):
-    raise belum_diimplementasi("GET /api/export")
+@router.get("/export", summary="Ekspor rekap kasus per Polsek x jenis (csv / xlsx)")
+def ekspor(
+    conn: Conn,
+    format: Literal["csv", "xlsx"] = Query("csv"),
+    tahun: int | None = Query(None, ge=2000, le=2100, description="default: tahun terbaru"),
+    jenis: str | None = Query(None, description="id jenis dipisah koma (kolom jenis yang diekspor)"),
+    polsek: str | None = Query(None, description="id polsek dipisah koma"),
+):
+    jenis_l, polsek_l = daftar_int(jenis, "jenis"), daftar_int(polsek, "polsek")
+    t = rekap.tentukan_tahun(conn, tahun)
+    header, baris = ekspor_svc.susun_tabel(conn, t, jenis_l, polsek_l)
+    if format == "csv":
+        isi, media = ekspor_svc.ke_csv(header, baris), "text/csv; charset=utf-8"
+    else:
+        isi, media = ekspor_svc.ke_xlsx(header, baris, t), ekspor_svc.XLSX_MEDIA
+    return Response(content=isi, media_type=media,
+                    headers={"Content-Disposition": f'attachment; filename="rekap_kriminalitas_{t}.{format}"'})

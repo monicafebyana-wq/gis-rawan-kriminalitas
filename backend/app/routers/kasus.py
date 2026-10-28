@@ -2,13 +2,13 @@
 Catatan: f-string di bawah hanya menyisipkan potongan SQL tetap (bukan input pengguna); semua nilai lewat parameter."""
 import psycopg
 from fastapi import APIRouter, Query, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.db import Conn
 from app.deps import Admin, Pengguna
 from app.errors import ApiError, tidak_ditemukan, validasi_gagal
 from app.params import daftar_int
-from app.services import rekap, zonasi
+from app.services import audit, rekap, zonasi
 
 router = APIRouter(tags=["Kasus"])
 
@@ -21,7 +21,9 @@ class KasusBaru(BaseModel):
 
 
 class KasusUbah(BaseModel):
-    """Semua field opsional: kirim hanya yang ingin diubah (minimal satu)."""
+    """Semua field opsional: kirim hanya yang ingin diubah (minimal satu). Field lain (mis. nama_polsek) diabaikan
+    dan disebutkan di respons pada kunci `diabaikan`."""
+    model_config = ConfigDict(extra="allow")
     id_polsek: int | None = None
     id_jenis: int | None = None
     tahun: int | None = Field(None, ge=2000, le=2100)
@@ -75,13 +77,14 @@ def tambah_kasus(body: KasusBaru, conn: Conn, user: Pengguna):
     if row is None:
         raise ApiError(409, "DATA_SUDAH_ADA", "Kombinasi polsek+jenis+tahun sudah ada (pakai PUT /kasus/{id} untuk mengubahnya)")
     zonasi.refresh_zona(conn, body.tahun)
+    audit.catat(conn, user, "tambah", "kasus", row["id_kasus"], row)
     conn.commit()
     return row
 
 
 @router.put("/kasus/{id_kasus}", summary="Ubah kasus - semua field boleh diubah (operator/admin)")
 def ubah_kasus(id_kasus: int, body: KasusUbah, conn: Conn, user: Pengguna):
-    perubahan = body.model_dump(exclude_none=True)
+    perubahan = {k: v for k, v in body.model_dump(exclude_none=True).items() if k in KasusUbah.model_fields}   # hanya kolom resmi
     if not perubahan:
         raise validasi_gagal("Kirim minimal satu field yang ingin diubah", list(KasusUbah.model_fields))
     lama = conn.execute(f"SELECT {_KOLOM} FROM kasus_kejahatan WHERE id_kasus = %s FOR UPDATE", (id_kasus,)).fetchone()
@@ -96,15 +99,18 @@ def ubah_kasus(id_kasus: int, body: KasusUbah, conn: Conn, user: Pengguna):
         raise ApiError(409, "DATA_SUDAH_ADA", "Kombinasi polsek+jenis+tahun itu sudah dipakai data kasus lain")
     for t in {lama["tahun"], row["tahun"]}:                                 # tahun lama & baru sama-sama dihitung ulang zonanya
         zonasi.refresh_zona(conn, t)
+    audit.catat(conn, user, "ubah", "kasus", id_kasus, {"sebelum": lama, "sesudah": row})
     conn.commit()
-    return row
+    # `diubah` = field yang nilainya benar-benar berbeda; `diabaikan` = field kiriman yang bukan kolom kasus
+    return {**row, "diubah": sorted(k for k in perubahan if perubahan[k] != lama[k]), "diabaikan": sorted(body.model_extra or {})}
 
 
 @router.delete("/kasus/{id_kasus}", status_code=204, summary="Hapus kasus (khusus admin)")
 def hapus_kasus(id_kasus: int, conn: Conn, user: Admin):
-    row = conn.execute("DELETE FROM kasus_kejahatan WHERE id_kasus = %s RETURNING tahun", (id_kasus,)).fetchone()
+    row = conn.execute(f"DELETE FROM kasus_kejahatan WHERE id_kasus = %s RETURNING {_KOLOM}", (id_kasus,)).fetchone()
     if row is None:
         raise tidak_ditemukan(f"Kasus dengan id {id_kasus} tidak ditemukan")
     zonasi.refresh_zona(conn, row["tahun"])
+    audit.catat(conn, user, "hapus", "kasus", id_kasus, row)
     conn.commit()
     return Response(status_code=204)
