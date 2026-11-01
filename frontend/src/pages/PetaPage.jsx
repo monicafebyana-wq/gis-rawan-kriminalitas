@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, CircleMarker, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.heat'; // harus SESUDAH leaflet: menambah L.heatLayer
 import 'leaflet/dist/leaflet.css';
@@ -7,10 +7,13 @@ import { api } from '../api.js';
 
 // Halaman Peta (/peta): bilah filter di atas, peta besar di kiri, panel Kontrol Layer + Keterangan Zona di kanan.
 // Poligon diwarnai menurut zona; klik poligon untuk melihat rincian jenis kejahatan.
-// Lapisan tambahan: heatmap titik kejadian (GET /api/heatmap) dan alat Cek lokasi (GET /api/spasial/titik).
+// Lapisan tambahan: heatmap titik kejadian, titik kejadian satu per satu (GET /api/heatmap),
+// dan alat Cek lokasi (GET /api/spasial/titik) lewat klik di peta atau GPS pengguna.
 
 const WARNA = { tinggi: '#FF3131', sedang: '#FFC800', rendah: '#20A99B' };
 const LABEL = { tinggi: 'Tinggi', sedang: 'Sedang', rendah: 'Rendah' };
+const WARNA_TITIK = '#7C3AED'; // titik kejadian: ungu (tidak bentrok dengan warna zona)
+const WARNA_CEK = '#1D4ED8'; // penanda Cek lokasi / GPS: biru, seperti penanda lokasi di peta pada umumnya
 const PUSAT_AWAL = [-7.05, 107.55]; // Kab. Bandung
 // Pilihan peta dasar (Kontrol Layer).
 const PETA_DASAR = {
@@ -31,6 +34,7 @@ const PETA_DASAR = {
   },
 };
 const FILTER_AWAL = { tahun: '', jenis: '', polsek: '', zona: ['tinggi', 'sedang', 'rendah'] };
+const GRID_TITIK = 0.0005; // ~55 m: sel grid terkecil yang diizinkan backend, dipakai untuk titik satu per satu
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -90,6 +94,15 @@ function KlikPeta({ aktif, onKlik }) {
   return null;
 }
 
+// Geser peta ke posisi GPS pengguna.
+function TerbangKe({ titik }) {
+  const map = useMap();
+  useEffect(() => {
+    if (titik) map.flyTo([titik.lat, titik.lng], Math.max(map.getZoom(), 13));
+  }, [titik, map]);
+  return null;
+}
+
 // Isi popup: rincian jenis kejahatan satu Polsek.
 function isiPopup(d) {
   const baris = d.rincian_jenis
@@ -130,8 +143,13 @@ export default function PetaPage() {
   const [heat, setHeat] = useState(null); // respons /api/heatmap
   const [heatStatus, setHeatStatus] = useState('diam'); // diam | memuat | ok | gagal
   const [radiusHeat, setRadiusHeat] = useState(25);
+  const [titikAktif, setTitikAktif] = useState(false);
+  const [titik, setTitik] = useState(null); // respons /api/heatmap dengan grid terkecil
+  const [titikStatus, setTitikStatus] = useState('diam'); // diam | memuat | ok | gagal
   const [cekAktif, setCekAktif] = useState(false);
   const [cek, setCek] = useState(null); // { lat, lng, hasil | galat }
+  const [fokus, setFokus] = useState(null); // posisi GPS pengguna, peta terbang ke sini
+  const [gpsStatus, setGpsStatus] = useState('');
   const [sedangUnduh, setSedangUnduh] = useState('');
   const [galatUnduh, setGalatUnduh] = useState('');
 
@@ -187,15 +205,60 @@ export default function PetaPage() {
     };
   }, [heatAktif, terapkan]);
 
+  // Titik kejadian: heatmap dengan grid terkecil (~55 m), digambar sebagai titik satu per satu.
+  useEffect(() => {
+    if (!titikAktif || !terapkan.tahun) return undefined;
+    let batal = false;
+    setTitikStatus('memuat');
+    api
+      .heatmap({ tahun: terapkan.tahun, jenis: terapkan.jenis, polsek: terapkan.polsek, grid: GRID_TITIK })
+      .then((r) => {
+        if (batal) return;
+        setTitik(r);
+        setTitikStatus('ok');
+      })
+      .catch(() => {
+        if (!batal) setTitikStatus('gagal');
+      });
+    return () => {
+      batal = true;
+    };
+  }, [titikAktif, terapkan]);
+
   async function cekLokasi(ll) {
-    const titik = { lat: ll.lat, lng: ll.lng };
-    setCek({ ...titik, memuat: true });
+    const t = { lat: ll.lat, lng: ll.lng };
+    setCek({ ...t, memuat: true });
     try {
       const r = await api.spasialTitik({ lat: ll.lat.toFixed(6), lng: ll.lng.toFixed(6), tahun: terapkan.tahun });
-      setCek({ ...titik, hasil: r });
+      setCek({ ...t, hasil: r });
     } catch (e) {
-      setCek({ ...titik, galat: e.message });
+      setCek({ ...t, galat: e.message });
     }
+  }
+
+  // Ambil posisi GPS browser, lalu periksa wilayah dan zonanya dengan alat Cek lokasi.
+  function lokasiSaya() {
+    if (!navigator.geolocation) {
+      setGpsStatus('Browser ini tidak mendukung GPS.');
+      return;
+    }
+    setCekAktif(true);
+    setGpsStatus('Mencari lokasimu…');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const ll = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setGpsStatus('');
+        setFokus(ll);
+        cekLokasi(ll);
+      },
+      (err) =>
+        setGpsStatus(
+          err.code === 1
+            ? 'Izin lokasi ditolak. Aktifkan lewat ikon gembok di address bar.'
+            : 'Lokasi tidak bisa ditemukan.'
+        ),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   async function unduhRekap(format) {
@@ -399,7 +462,7 @@ export default function PetaPage() {
         {/* Peta */}
         <div className="col-12 col-lg-9 d-flex flex-column">
           <div className="peta-wrap">
-            <MapContainer center={PUSAT_AWAL} zoom={10} scrollWheelZoom className="peta-area">
+            <MapContainer center={PUSAT_AWAL} zoom={10} scrollWheelZoom preferCanvas className="peta-area">
               <TileLayer
                 key={dasar}
                 attribution={PETA_DASAR[dasar].attribution}
@@ -416,18 +479,30 @@ export default function PetaPage() {
               )}
               <PasKanPeta data={data} />
               {heatAktif && heat && <LapisanHeat data={heat} radius={radiusHeat} />}
+              {titikAktif && titik && titik.data.map((d) => (
+                <CircleMarker
+                  key={`${d.lat},${d.lng}`}
+                  center={[d.lat, d.lng]}
+                  radius={d.bobot > 1 ? 5 + Math.min(d.bobot, 6) : 4}
+                  pathOptions={{ color: '#ffffff', weight: 1, fillColor: WARNA_TITIK, fillOpacity: 0.85 }}
+                >
+                  <Tooltip>{d.bobot} kejadian</Tooltip>
+                </CircleMarker>
+              ))}
               <KlikPeta aktif={cekAktif} onKlik={cekLokasi} />
+              <TerbangKe titik={fokus} />
               {cek && (
                 <CircleMarker
                   center={[cek.lat, cek.lng]}
-                  radius={7}
-                  pathOptions={{ color: '#2a1b13', weight: 2, fillColor: '#c4601a', fillOpacity: 0.9 }}
+                  radius={8}
+                  pathOptions={{ color: '#ffffff', weight: 3, fillColor: WARNA_CEK, fillOpacity: 1 }}
                 />
               )}
             </MapContainer>
 
             {status === 'memuat' && <div className="peta-memuat">Memuat peta…</div>}
             {heatStatus === 'memuat' && status !== 'memuat' && <div className="peta-memuat">Memuat heatmap…</div>}
+            {titikStatus === 'memuat' && status !== 'memuat' && <div className="peta-memuat">Memuat titik…</div>}
           </div>
         </div>
 
@@ -506,10 +581,40 @@ export default function PetaPage() {
               )}
 
               <div className="form-check form-switch mt-2">
+                <input className="form-check-input" type="checkbox" role="switch" id="lap-titik"
+                  checked={titikAktif} onChange={(e) => setTitikAktif(e.target.checked)} />
+                <label className="form-check-label" htmlFor="lap-titik">
+                  <span className="dot" style={{ background: WARNA_TITIK }} /> Titik kejadian
+                </label>
+              </div>
+              {titikAktif && (
+                <div className="small text-secondary mt-1">
+                  {titikStatus === 'memuat' && 'Memuat titik…'}
+                  {titikStatus === 'gagal' && <span className="text-danger">Titik gagal dimuat.</span>}
+                  {titikStatus === 'ok' && titik && titik.total_titik === 0 && (
+                    <>Belum ada titik kejadian untuk filter ini (tahun {terapkan.tahun}).</>
+                  )}
+                  {titikStatus === 'ok' && titik && titik.total_titik > 0 && (
+                    <>
+                      <strong>{titik.total_titik}</strong> kejadian tahun {terapkan.tahun}. Lingkaran lebih besar
+                      berarti beberapa kejadian berdekatan. Lokasi dibulatkan ke ±
+                      {Math.round(titik.grid_derajat * 111000)} m.
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="form-check form-switch mt-2">
                 <input className="form-check-input" type="checkbox" role="switch" id="lap-cek"
                   checked={cekAktif} onChange={(e) => { setCekAktif(e.target.checked); if (!e.target.checked) setCek(null); }} />
-                <label className="form-check-label" htmlFor="lap-cek">Cek lokasi (klik di peta)</label>
+                <label className="form-check-label" htmlFor="lap-cek">
+                  <span className="dot" style={{ background: WARNA_CEK }} /> Cek lokasi (klik di peta)
+                </label>
               </div>
+              <button type="button" className="btn btn-outline-primary btn-sm mt-2" onClick={lokasiSaya}>
+                Gunakan lokasi saya
+              </button>
+              {gpsStatus && <div className="small text-secondary mt-1">{gpsStatus}</div>}
               {cekAktif && (
                 <div className="small mt-2" aria-live="polite">
                   {!cek && <span className="text-secondary">Klik satu titik di peta untuk tahu wilayah Polsek-nya.</span>}
