@@ -99,6 +99,34 @@ def heatmap(
     data = [{"lat": round(r["lat"], 6), "lng": round(r["lng"], 6), "bobot": r["bobot"]} for r in rows]
     return {"grid_derajat": grid, "total_titik": sum(d["bobot"] for d in data), "maks_bobot": data[0]["bobot"] if data else 0, "data": data}
 
+# ---------------------------------------------------------------- sebaran titik + jenis (publik)
+@router.get("/titik/sebaran", summary="Titik kejadian per sel grid + rincian jenis kejahatan (publik)")
+def sebaran_titik(
+    conn: Conn,
+    tahun: int | None = Query(None, ge=2000, le=2100),
+    dari: date | None = Query(None),
+    sampai: date | None = Query(None),
+    jenis: str | None = Query(None),
+    polsek: str | None = Query(None),
+    grid: float = Query(GRID_MIN, ge=GRID_MIN, le=0.1),
+):
+    prm = {**_filter(tahun, dari, sampai, jenis, polsek), "grid": grid}
+    rows = conn.execute(
+        f"""SELECT ST_Y(s)::float8 AS lat, ST_X(s)::float8 AS lng, nama_jenis, count(*)::int AS jumlah
+            FROM (SELECT ST_SnapToGrid(t.geom, %(grid)s::float8) AS s, j.nama_jenis
+                  FROM titik_kejadian t JOIN jenis_kejahatan j ON j.id_jenis = t.id_jenis
+                  WHERE {_WHERE}) q
+            GROUP BY s, nama_jenis""", prm).fetchall()
+    sel: dict[tuple[float, float], list[dict]] = {}
+    for r in rows:
+        sel.setdefault((round(r["lat"], 6), round(r["lng"], 6)), []).append(
+            {"nama_jenis": r["nama_jenis"], "jumlah": r["jumlah"]})
+    data = [
+        {"lat": k[0], "lng": k[1], "bobot": sum(x["jumlah"] for x in v),
+         "rincian": sorted(v, key=lambda x: -x["jumlah"])}
+        for k, v in sel.items()
+    ]
+    return {"grid_derajat": grid, "total_titik": sum(d["bobot"] for d in data), "data": data}
 
 # ---------------------------------------------------------------- titik persis (login)
 @router.get("/titik", summary="Daftar titik kejadian persis (operator/admin)")
