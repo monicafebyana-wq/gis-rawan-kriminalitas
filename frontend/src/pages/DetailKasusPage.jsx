@@ -6,14 +6,13 @@ import { api } from '../api.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-// Halaman Statistik Kriminalitas (satu halaman): grafik batang mendatar, lalu tabel + pencarian.
-// Alamat: /detail-kasus, /detail-kasus-grafik, /detail-kasus-tabel (halaman sama, hanya posisi gulir yang berbeda).
-// Data: GET /api/statistik, GET /api/kasus (berhalaman, limit maks. 100).
-const WARNA = { tinggi: '#FF3131', sedang: '#FFC800', rendah: '#20A99B' };
+// Halaman Statistik Kriminalitas (satu halaman): #grafik (bar chart mendatar + ringkasan), lalu #tabel + pencarian.
+// Data: GET /api/statistik, GET /api/statistik/tren, GET /api/kasus (berhalaman).
+const WARNA = { tinggi: '#D96C7B', sedang: '#F5B58A', rendah: '#9ACDB8' };
 const TINGKAT = {
-  tinggi: { teks: 'Sangat Rawan', fg: '#fff' },
-  sedang: { teks: 'Cukup Rawan', fg: '#3b2f00' },
-  rendah: { teks: 'Tidak Rawan', fg: '#fff' },
+  tinggi: { teks: 'Sangat Rawan', fg: '#4A1B22' },
+  sedang: { teks: 'Cukup Rawan', fg: '#5A3414' },
+  rendah: { teks: 'Tidak Rawan', fg: '#16463A' },
 };
 const angka = (n) => Number(n).toLocaleString('id-ID');
 const PER_HALAMAN = 15;
@@ -23,9 +22,9 @@ function ambilBaris(r) {
   return r?.data || r?.items || r?.kasus || [];
 }
 
-// Ambil semua halaman /api/kasus (API membatasi jumlah baris per halaman).
+// Ambil semua halaman /api/kasus. Limit 20 (default API) supaya tidak ditolak validasi.
 async function ambilSemuaKasus() {
-  const LIMIT = 100; // batas maksimal API
+  const LIMIT = 20;
   const pertama = await api.kasus({ page: 1, limit: LIMIT });
   const semua = [...ambilBaris(pertama)];
   const total = pertama?.total_data ?? semua.length;
@@ -36,7 +35,7 @@ async function ambilSemuaKasus() {
       api.kasus({ page: i + 2, limit: LIMIT }).then(ambilBaris)
     )
   );
-  sisa.forEach((b) => semua.push(...b));
+  sisa.forEach((baris) => semua.push(...baris));
   return semua;
 }
 
@@ -62,28 +61,28 @@ function BatangMendatar({ label, nilai, warna }) {
 }
 
 export default function DetailKasusPage() {
-  const { pathname } = useLocation();
+  const { hash } = useLocation();
   const [stat, setStat] = useState(null);
+  const [tren, setTren] = useState([]);
   const [baris, setBaris] = useState([]);
   const [galat, setGalat] = useState('');
   const [cari, setCari] = useState('');
   const [halaman, setHalaman] = useState(1);
 
   useEffect(() => {
-    Promise.all([api.statistik(), ambilSemuaKasus()])
-      .then(([s, k]) => {
+    Promise.all([api.statistik(), api.tren(), ambilSemuaKasus()])
+      .then(([s, t, k]) => {
         setStat(s);
+        setTren(t?.data || []);
         setBaris(k);
       })
       .catch((e) => setGalat(e.message));
   }, []);
 
-  // Gulir ke bagian grafik/tabel sesuai alamat (/detail-kasus-grafik atau /detail-kasus-tabel).
+  // Scroll ke #grafik / #tabel setelah data tampil (dari klik submenu sidebar).
   useEffect(() => {
-    if (!stat) return;
-    const id = pathname.endsWith('-tabel') ? 'tabel' : pathname.endsWith('-grafik') ? 'grafik' : null;
-    if (id) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  }, [stat, pathname]);
+    if (stat && hash) document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
+  }, [stat, hash]);
 
   // Kasus tertinggi per Polsek (jenis dengan jumlah terbesar) dari data /api/kasus.
   const teratas = useMemo(() => {
@@ -128,6 +127,17 @@ export default function DetailKasusPage() {
   }
   if (!stat) return <p className="text-secondary">Memuat statistik…</p>;
 
+  // Ringkasan statistik
+  const urut = [...tren].sort((a, b) => a.tahun - b.tahun);
+  let trend = 'Belum ada pembanding';
+  let warnaTrend = 'text-secondary';
+  if (urut.length >= 2) {
+    const a = urut[urut.length - 2].total_kasus;
+    const b = urut[urut.length - 1].total_kasus;
+    trend = b > a ? 'Meningkat' : b < a ? 'Menurun' : 'Stabil';
+    warnaTrend = b > a ? 'text-danger' : b < a ? 'text-success' : 'text-secondary';
+  }
+
   const jumlahHalaman = Math.max(1, Math.ceil(tersaring.length / PER_HALAMAN));
   const tampil = tersaring.slice((halaman - 1) * PER_HALAMAN, halaman * PER_HALAMAN);
   const adaCluster = polsek.some((p) => p.cluster !== undefined && p.cluster !== null);
@@ -136,23 +146,39 @@ export default function DetailKasusPage() {
     <>
       <h1 className="h3 mb-3">Statistik Kriminalitas Bandung</h1>
 
-      {/* 1. Grafik (bar chart mendatar) */}
-      <div className="card mb-4" id="grafik">
-        <div className="card-body">
-          <h2 className="h6">Distribusi Kriminalitas per Wilayah Bandung ({stat.tahun})</h2>
-          <div className="d-flex flex-wrap gap-3 mb-3 small">
-            {['tinggi', 'sedang', 'rendah'].map((z) => (
-              <span key={z}>
-                <span className={`dot dot-${z}`} /> Zona {z}: <strong>{stat.distribusi_zona[z]}</strong> wilayah
-              </span>
-            ))}
+      {/* 1. Grafik (bar chart mendatar) + ringkasan */}
+      <div className="row g-3 mb-4" id="grafik">
+        <div className="col-12 col-lg-8">
+          <div className="card h-100">
+            <div className="card-body">
+              <h2 className="h6">Distribusi Kriminalitas per Wilayah Bandung ({stat.tahun})</h2>
+              <div style={{ height: Math.max(420, polsek.length * 24 + 40) }}>
+                <BatangMendatar
+                  label={polsek.map((p) => p.nama_polsek)}
+                  nilai={polsek.map((p) => p.total_kasus)}
+                  warna={polsek.map((p) => WARNA[p.kategori_zona])}
+                />
+              </div>
+            </div>
           </div>
-          <div style={{ height: Math.max(420, polsek.length * 24 + 40) }}>
-            <BatangMendatar
-              label={polsek.map((p) => p.nama_polsek)}
-              nilai={polsek.map((p) => p.total_kasus)}
-              warna={polsek.map((p) => WARNA[p.kategori_zona])}
-            />
+        </div>
+        <div className="col-12 col-lg-4">
+          <div className="card h-100">
+            <div className="card-body">
+              <h2 className="h6">Ringkasan Statistik</h2>
+              <div className="text-secondary mt-3">Total Kasus</div>
+              <div className="fs-3 fw-bold">{angka(stat.total_kasus)}</div>
+              <div className="text-secondary mt-3">Tertinggi</div>
+              <div className="fs-5 fw-bold">
+                {stat.polsek_tertinggi.nama_polsek} ({angka(stat.polsek_tertinggi.total_kasus)})
+              </div>
+              <div className="text-secondary mt-3">Terendah</div>
+              <div className="fs-5 fw-bold">
+                {stat.polsek_terendah.nama_polsek} ({angka(stat.polsek_terendah.total_kasus)})
+              </div>
+              <div className="text-secondary mt-3">Trend</div>
+              <div className={`fs-5 fw-bold ${warnaTrend}`}>{trend}</div>
+            </div>
           </div>
         </div>
       </div>

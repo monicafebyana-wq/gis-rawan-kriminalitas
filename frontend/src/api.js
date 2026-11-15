@@ -104,6 +104,9 @@ export const api = {
   tren: (params) => request('/statistik/tren', { params }),
   // Heatmap: titik kejadian dirangkum per sel grid -> { grid_derajat, total_titik, maks_bobot, data: [{ lat, lng, bobot }] }
   heatmap: (params) => request('/heatmap', { params }),
+  // Titik kejadian + rincian jenis kejahatan per sel grid
+  // -> { grid_derajat, total_titik, data: [{ lat, lng, bobot, rincian: [{ nama_jenis, jumlah }] }] }
+  titikSebaran: (params) => request('/titik/sebaran', { params }), // { tahun?, jenis?, polsek?, grid? }
   // Query spasial: titik koordinat -> Polsek mana / Polsek terdekat
   spasialTitik: (params) => request('/spasial/titik', { params }), // { lat, lng, tahun? }
   spasialTerdekat: (params) => request('/spasial/terdekat', { params }), // { lat, lng, limit?, radius_m?, tahun? }

@@ -8,7 +8,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointEleme
 
 // Halaman Dashboard (beranda): kartu ringkasan + grafik TOP 5 + tren.
 // Data dari GET /api/statistik dan GET /api/statistik/tren.
-const WARNA = { tinggi: '#FF3131', sedang: '#FFC800', rendah: '#20A99B' };
+const WARNA = { tinggi: '#D96C7B', sedang: '#F5B58A', rendah: '#9ACDB8' };
 const angka = (n) => Number(n).toLocaleString('id-ID');
 const TOP = 5;
 
@@ -78,7 +78,7 @@ export default function DashboardPage() {
         <p className="mb-3">Di mana kasus paling banyak, dan jenis apa yang paling sering terjadi.</p>
         <div className="d-flex flex-wrap gap-2">
           <Link className="btn btn-primary" to="/peta">Lihat peta kerawanan</Link>
-          <Link className="btn btn-outline-secondary" to="/detail-kasus-grafik">Lihat detail kasus</Link>
+          <Link className="btn btn-outline-secondary" to="/detail-kasus">Lihat detail kasus</Link>
         </div>
       </section>
 
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               <BatangMendatar
                 label={topJenis.map((j) => j.nama_jenis)}
                 nilai={topJenis.map((j) => j.jumlah)}
-                warna="#C4601A"
+                warna="#6FA8DC"
               />
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                 <Line
                   data={{
                     labels: tren.map((t) => String(t.tahun)),
-                    datasets: [{ data: tren.map((t) => t.total_kasus), borderColor: '#4B5C3C', backgroundColor: '#4B5C3C', pointRadius: 5, tension: 0.2 }],
+                                        datasets: [{ data: tren.map((t) => t.total_kasus), borderColor: '#3FA796', backgroundColor: '#3FA796', pointRadius: 5, tension: 0.2 }],
                   }}
                   options={{
                     maintainAspectRatio: false,

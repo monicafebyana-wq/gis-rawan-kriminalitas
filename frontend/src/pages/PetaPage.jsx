@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.heat'; // harus SESUDAH leaflet: menambah L.heatLayer
 import 'leaflet/dist/leaflet.css';
@@ -7,11 +7,11 @@ import { api } from '../api.js';
 
 // Halaman Peta (/peta): bilah filter di atas, peta besar di kiri, panel Kontrol Layer + Keterangan Zona di kanan.
 // Poligon diwarnai menurut zona; klik poligon untuk melihat rincian jenis kejahatan.
-// Lapisan tambahan: heatmap titik kejadian, titik kejadian satu per satu (GET /api/heatmap),
-// dan alat Cek lokasi (GET /api/spasial/titik) lewat klik di peta atau GPS pengguna.
+// Lapisan tambahan: heatmap titik kejadian (GET /api/heatmap), titik kejadian satu per satu dengan jenis
+// kejahatannya (GET /api/titik/sebaran), dan alat Cek lokasi (GET /api/spasial/titik) lewat klik atau GPS.
 
-const WARNA = { tinggi: '#FF3131', sedang: '#FFC800', rendah: '#20A99B' };
-const LABEL = { tinggi: 'Tinggi', sedang: 'Sedang', rendah: 'Rendah' };
+const WARNA = { tinggi: '#D96C7B', sedang: '#F5B58A', rendah: '#9ACDB8' };
+const TEKS_ZONA = { tinggi: '#4A1B22', sedang: '#5A3414', rendah: '#16463A' };
 const WARNA_TITIK = '#7C3AED'; // titik kejadian: ungu (tidak bentrok dengan warna zona)
 const WARNA_CEK = '#1D4ED8'; // penanda Cek lokasi / GPS: biru, seperti penanda lokasi di peta pada umumnya
 const PUSAT_AWAL = [-7.05, 107.55]; // Kab. Bandung
@@ -69,7 +69,7 @@ function LapisanHeat({ data, radius }) {
         blur: Math.round(radius * 0.8),
         max: Math.max(data.maks_bobot, 3), // data jarang (bobot 1-2) tidak langsung merah semua
         minOpacity: 0.35,
-        gradient: { 0.2: '#20A99B', 0.55: '#FFC800', 1: '#FF3131' },
+        gradient: { 0.2: '#9ACDB8', 0.55: '#F5B58A', 1: '#D96C7B' },
       }
     ).addTo(map);
     return () => {
@@ -144,7 +144,7 @@ export default function PetaPage() {
   const [heatStatus, setHeatStatus] = useState('diam'); // diam | memuat | ok | gagal
   const [radiusHeat, setRadiusHeat] = useState(25);
   const [titikAktif, setTitikAktif] = useState(false);
-  const [titik, setTitik] = useState(null); // respons /api/heatmap dengan grid terkecil
+  const [titik, setTitik] = useState(null); // respons /api/titik/sebaran (titik + rincian jenis)
   const [titikStatus, setTitikStatus] = useState('diam'); // diam | memuat | ok | gagal
   const [cekAktif, setCekAktif] = useState(false);
   const [cek, setCek] = useState(null); // { lat, lng, hasil | galat }
@@ -205,13 +205,13 @@ export default function PetaPage() {
     };
   }, [heatAktif, terapkan]);
 
-  // Titik kejadian: heatmap dengan grid terkecil (~55 m), digambar sebagai titik satu per satu.
+  // Titik kejadian satu per satu (~55 m) lengkap dengan rincian jenis kejahatannya.
   useEffect(() => {
     if (!titikAktif || !terapkan.tahun) return undefined;
     let batal = false;
     setTitikStatus('memuat');
     api
-      .heatmap({ tahun: terapkan.tahun, jenis: terapkan.jenis, polsek: terapkan.polsek, grid: GRID_TITIK })
+      .titikSebaran({ tahun: terapkan.tahun, jenis: terapkan.jenis, polsek: terapkan.polsek, grid: GRID_TITIK })
       .then((r) => {
         if (batal) return;
         setTitik(r);
@@ -486,7 +486,19 @@ export default function PetaPage() {
                   radius={d.bobot > 1 ? 5 + Math.min(d.bobot, 6) : 4}
                   pathOptions={{ color: '#ffffff', weight: 1, fillColor: WARNA_TITIK, fillOpacity: 0.85 }}
                 >
-                  <Tooltip>{d.bobot} kejadian</Tooltip>
+                  <Tooltip>{d.bobot === 1 ? d.rincian[0].nama_jenis : `${d.bobot} kejadian`}</Tooltip>
+                  <Popup>
+                    <div className="fw-bold mb-1">
+                      {d.bobot === 1 ? 'Jenis kejahatan' : `${d.bobot} kejadian di sekitar titik ini`}
+                    </div>
+                    <ul className="mb-0 ps-3">
+                      {d.rincian.map((r) => (
+                        <li key={r.nama_jenis}>
+                          {r.nama_jenis}{r.jumlah > 1 && ` × ${r.jumlah}`}
+                        </li>
+                      ))}
+                    </ul>
+                  </Popup>
                 </CircleMarker>
               ))}
               <KlikPeta aktif={cekAktif} onKlik={cekLokasi} />
@@ -596,9 +608,9 @@ export default function PetaPage() {
                   )}
                   {titikStatus === 'ok' && titik && titik.total_titik > 0 && (
                     <>
-                      <strong>{titik.total_titik}</strong> kejadian tahun {terapkan.tahun}. Lingkaran lebih besar
-                      berarti beberapa kejadian berdekatan. Lokasi dibulatkan ke ±
-                      {Math.round(titik.grid_derajat * 111000)} m.
+                      <strong>{titik.total_titik}</strong> kejadian tahun {terapkan.tahun}. Klik titik untuk melihat
+                      jenis kejahatannya. Lingkaran lebih besar berarti beberapa kejadian berdekatan. Lokasi
+                      dibulatkan ke ±{Math.round(titik.grid_derajat * 111000)} m.
                     </>
                   )}
                 </div>
