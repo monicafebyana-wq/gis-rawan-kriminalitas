@@ -4,15 +4,18 @@ import L from 'leaflet';
 import 'leaflet.heat'; // harus SESUDAH leaflet: menambah L.heatLayer
 import 'leaflet/dist/leaflet.css';
 import { api } from '../api.js';
+import CatatanTahun from '../components/CatatanTahun.jsx';
 
 // Halaman Peta (/peta): bilah filter di atas, peta besar di kiri, panel Kontrol Layer + Keterangan Zona di kanan.
 // Poligon diwarnai menurut zona; klik poligon untuk melihat rincian jenis kejahatan.
 // Lapisan tambahan: heatmap titik kejadian (GET /api/heatmap), titik kejadian satu per satu dengan jenis
-// kejahatannya (GET /api/titik/sebaran), dan alat Cek lokasi (GET /api/spasial/titik) lewat klik atau GPS.
+// kejahatannya (GET /api/titik/sebaran), kejadian yang dilengkapi berita (GET /api/berita-kejadian), dan alat Cek lokasi
+// (GET /api/spasial/titik) lewat klik atau GPS. Peringatan per tahun (mis. data simulasi) datang dari GET /api/tahun.
 
 const WARNA = { tinggi: '#D96C7B', sedang: '#F5B58A', rendah: '#9ACDB8' };
 const TEKS_ZONA = { tinggi: '#4A1B22', sedang: '#5A3414', rendah: '#16463A' };
 const WARNA_TITIK = '#7C3AED'; // titik kejadian: ungu (tidak bentrok dengan warna zona)
+const WARNA_BERITA = '#0E7490'; // kejadian berita: biru kehijauan tua
 const WARNA_CEK = '#1D4ED8'; // penanda Cek lokasi / GPS: biru, seperti penanda lokasi di peta pada umumnya
 const PUSAT_AWAL = [-7.05, 107.55]; // Kab. Bandung
 // Pilihan peta dasar (Kontrol Layer).
@@ -103,6 +106,41 @@ function TerbangKe({ titik }) {
   return null;
 }
 
+const tglId = (iso) =>
+  iso ? new Date(`${iso}T00:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const aman = (u) => /^https?:\/\//i.test(u); // tautan hanya http/https (bukan javascript:)
+
+// Popup kejadian berita: jenis, tanggal, wilayah, dan tautan ke berita (dibuka di tab baru).
+function PopupBerita({ p }) {
+  return (
+    <div className="popup-berita">
+      <div className="fw-bold">{p.nama_jenis}</div>
+      <div className="small text-secondary mb-2">
+        {tglId(p.tanggal)}{p.nama_polsek && ` · Polsek ${p.nama_polsek}`}
+      </div>
+      {p.berita.map((b) => (
+        <div className="mb-2" key={b.id_berita}>
+          {aman(b.url) ? (
+            <a href={b.url} target="_blank" rel="noopener noreferrer" className="fw-semibold">{b.judul}</a>
+          ) : (
+            <span className="fw-semibold">{b.judul}</span>
+          )}
+          <div className="small text-secondary">
+            {b.sumber}{b.tanggal_terbit && ` · ${tglId(b.tanggal_terbit)}`}
+          </div>
+          {b.ringkasan && <div className="small">{b.ringkasan}</div>}
+        </div>
+      ))}
+      {p.akurasi !== 'tepat' && (
+        <div className="small fst-italic text-secondary border-top pt-1">
+          Posisi penanda hanya perkiraan di wilayah {p.akurasi === 'desa' ? 'desa' : 'kecamatan'} yang disebut berita,
+          bukan lokasi kejadian yang tepat.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Isi popup: rincian jenis kejahatan satu Polsek.
 function isiPopup(d) {
   const baris = d.rincian_jenis
@@ -146,6 +184,10 @@ export default function PetaPage() {
   const [titikAktif, setTitikAktif] = useState(false);
   const [titik, setTitik] = useState(null); // respons /api/titik/sebaran (titik + rincian jenis)
   const [titikStatus, setTitikStatus] = useState('diam'); // diam | memuat | ok | gagal
+  const [beritaAktif, setBeritaAktif] = useState(false);
+  const [berita, setBerita] = useState(null); // respons /api/berita-kejadian (GeoJSON)
+  const [beritaStatus, setBeritaStatus] = useState('diam'); // diam | memuat | ok | gagal
+  const [catatanTahun, setCatatanTahun] = useState({}); // { "2025": "Data simulasi ..." } dari /api/tahun
   const [cekAktif, setCekAktif] = useState(false);
   const [cek, setCek] = useState(null); // { lat, lng, hasil | galat }
   const [fokus, setFokus] = useState(null); // posisi GPS pengguna, peta terbang ke sini
@@ -158,6 +200,7 @@ export default function PetaPage() {
     Promise.all([api.tahun(), api.jenis(), api.polsek()])
       .then(([t, j, p]) => {
         setDaftarTahun(t.data);
+        setCatatanTahun(t.catatan || {});
         setDaftarJenis(j.data);
         setDaftarPolsek(
           p.features
@@ -224,6 +267,26 @@ export default function PetaPage() {
       batal = true;
     };
   }, [titikAktif, terapkan]);
+
+  // Kejadian yang dilengkapi berita: ikut filter tahun, jenis, dan polsek.
+  useEffect(() => {
+    if (!beritaAktif || !terapkan.tahun) return undefined;
+    let batal = false;
+    setBeritaStatus('memuat');
+    api
+      .beritaKejadian({ tahun: terapkan.tahun, jenis: terapkan.jenis, polsek: terapkan.polsek })
+      .then((r) => {
+        if (batal) return;
+        setBerita(r);
+        setBeritaStatus('ok');
+      })
+      .catch(() => {
+        if (!batal) setBeritaStatus('gagal');
+      });
+    return () => {
+      batal = true;
+    };
+  }, [beritaAktif, terapkan]);
 
   async function cekLokasi(ll) {
     const t = { lat: ll.lat, lng: ll.lng };
@@ -450,6 +513,7 @@ export default function PetaPage() {
           Data belum bisa dimuat ({pesanGagal}). Pastikan backend sudah jalan di <code>http://localhost:3000</code>.
         </div>
       )}
+      <CatatanTahun catatan={catatanTahun} tahun={terapkan.tahun} />
       {status === 'ok' && data && (
         <div className="small text-secondary mb-2">
           Menampilkan <strong>{data.features.length}</strong> wilayah · total{' '}
@@ -501,6 +565,17 @@ export default function PetaPage() {
                   </Popup>
                 </CircleMarker>
               ))}
+              {beritaAktif && berita && berita.features.map((f) => (
+                <CircleMarker
+                  key={f.properties.id_titik}
+                  center={[f.geometry.coordinates[1], f.geometry.coordinates[0]]}
+                  radius={9}
+                  pathOptions={{ color: '#ffffff', weight: 2, fillColor: WARNA_BERITA, fillOpacity: 0.95 }}
+                >
+                  <Tooltip>{f.properties.nama_jenis} · berita</Tooltip>
+                  <Popup maxWidth={320}><PopupBerita p={f.properties} /></Popup>
+                </CircleMarker>
+              ))}
               <KlikPeta aktif={cekAktif} onKlik={cekLokasi} />
               <TerbangKe titik={fokus} />
               {cek && (
@@ -515,6 +590,7 @@ export default function PetaPage() {
             {status === 'memuat' && <div className="peta-memuat">Memuat peta…</div>}
             {heatStatus === 'memuat' && status !== 'memuat' && <div className="peta-memuat">Memuat heatmap…</div>}
             {titikStatus === 'memuat' && status !== 'memuat' && <div className="peta-memuat">Memuat titik…</div>}
+            {beritaStatus === 'memuat' && status !== 'memuat' && <div className="peta-memuat">Memuat berita…</div>}
           </div>
         </div>
 
@@ -588,6 +664,12 @@ export default function PetaPage() {
                         ±{Math.round(heat.grid_derajat * 111000)} m. Jumlahnya bisa berbeda dari rekap kasus.
                       </>
                     )}
+                    {heatStatus === 'ok' && heat && heat.per_sumber && heat.per_sumber.simulasi > 0 && (
+                      <div className="text-warning-emphasis mt-1">
+                        Peringatan: {heat.per_sumber.simulasi} dari {heat.total_titik} titik adalah <strong>data simulasi</strong> (contoh),
+                        bukan lokasi kejadian sebenarnya.
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -611,6 +693,35 @@ export default function PetaPage() {
                       <strong>{titik.total_titik}</strong> kejadian tahun {terapkan.tahun}. Klik titik untuk melihat
                       jenis kejahatannya. Lingkaran lebih besar berarti beberapa kejadian berdekatan. Lokasi
                       dibulatkan ke ±{Math.round(titik.grid_derajat * 111000)} m.
+                    </>
+                  )}
+                  {titikStatus === 'ok' && titik && titik.per_sumber && titik.per_sumber.simulasi > 0 && (
+                    <div className="text-warning-emphasis mt-1">
+                      Peringatan: {titik.per_sumber.simulasi} dari {titik.total_titik} titik adalah <strong>data simulasi</strong> (contoh),
+                      bukan lokasi kejadian sebenarnya.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="form-check form-switch mt-2">
+                <input className="form-check-input" type="checkbox" role="switch" id="lap-berita"
+                  checked={beritaAktif} onChange={(e) => setBeritaAktif(e.target.checked)} />
+                <label className="form-check-label" htmlFor="lap-berita">
+                  <span className="dot" style={{ background: WARNA_BERITA }} /> Kejadian dengan berita
+                </label>
+              </div>
+              {beritaAktif && (
+                <div className="small text-secondary mt-1">
+                  {beritaStatus === 'memuat' && 'Memuat berita…'}
+                  {beritaStatus === 'gagal' && <span className="text-danger">Berita gagal dimuat.</span>}
+                  {beritaStatus === 'ok' && berita && berita.total === 0 && (
+                    <>Belum ada kejadian berita untuk filter ini (tahun {terapkan.tahun}).</>
+                  )}
+                  {beritaStatus === 'ok' && berita && berita.total > 0 && (
+                    <>
+                      <strong>{berita.total}</strong> kejadian berita tahun {terapkan.tahun}. Klik penanda untuk membuka
+                      tautan beritanya. Posisi penanda adalah perkiraan di wilayah yang disebut berita.
                     </>
                   )}
                 </div>

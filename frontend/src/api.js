@@ -107,6 +107,8 @@ export const api = {
   // Titik kejadian + rincian jenis kejahatan per sel grid
   // -> { grid_derajat, total_titik, data: [{ lat, lng, bobot, rincian: [{ nama_jenis, jumlah }] }] }
   titikSebaran: (params) => request('/titik/sebaran', { params }), // { tahun?, jenis?, polsek?, grid? }
+  // Kejadian yang dilengkapi berita (GeoJSON Point; properties.berita = [{ judul, sumber, url, tanggal_terbit, ringkasan }])
+  beritaKejadian: (params) => request('/berita-kejadian', { params }), // { tahun?, jenis?, polsek?, limit? }
   // Query spasial: titik koordinat -> Polsek mana / Polsek terdekat
   spasialTitik: (params) => request('/spasial/titik', { params }), // { lat, lng, tahun? }
   spasialTerdekat: (params) => request('/spasial/terdekat', { params }), // { lat, lng, limit?, radius_m?, tahun? }
@@ -132,6 +134,11 @@ export const api = {
   hapusTitik: (token, id) => request(`/titik/${id}`, { method: 'DELETE', token }), // khusus admin
   imporTitik: (token, form) => request('/titik/import', { method: 'POST', form, token }), // form: file, dry_run
   imporCsv: (token, form) => request('/import/csv', { method: 'POST', form, token }),
+  // Berita yang melengkapi titik kejadian
+  daftarBerita: (token, idTitik) => request(`/titik/${idTitik}/berita`, { token }),
+  tambahBerita: (token, idTitik, body) => request(`/titik/${idTitik}/berita`, { method: 'POST', body, token }), // { judul, sumber, url, tanggal_terbit?, ringkasan? }
+  ubahBerita: (token, id, body) => request(`/berita/${id}`, { method: 'PUT', body, token }),
+  hapusBerita: (token, id) => request(`/berita/${id}`, { method: 'DELETE', token }), // khusus admin
 
   // Kelola akun (khusus admin)
   pengguna: (token) => request('/pengguna', { token }),
@@ -147,6 +154,10 @@ export const api = {
   tambahJenis: (token, body) => request('/jenis', { method: 'POST', body, token }), // { kode_jenis, nama_jenis }
   ubahJenis: (token, id, body) => request(`/jenis/${id}`, { method: 'PUT', body, token }),
   hapusJenis: (token, id) => request(`/jenis/${id}`, { method: 'DELETE', token }),
+
+  // Catatan per tahun, mis. "data simulasi" (khusus admin). Dibaca publik lewat api.tahun().catatan
+  aturCatatanTahun: (token, tahun, catatan) => request(`/tahun/${tahun}/catatan`, { method: 'PUT', body: { catatan }, token }),
+  hapusCatatanTahun: (token, tahun) => request(`/tahun/${tahun}/catatan`, { method: 'DELETE', token }),
 
   // Riwayat perubahan (khusus admin)
   audit: (token, params) => request('/audit', { params, token }),

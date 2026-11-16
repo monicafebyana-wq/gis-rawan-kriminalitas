@@ -371,3 +371,24 @@ Jika ada baris bermasalah → `400` dengan `detail` berisi nomor baris dan alasa
 - [ ] Putuskan: ada data tahun lain atau tren cukup 2024?
 - [ ] Putuskan: ekspor `pdf` dibuat atau cukup `csv`?
 - [ ] Back end: Node.js (Express) atau Laravel? (tidak mengubah contract ini)
+
+## 6. Tambahan Endpoint (setelah kontrak awal)
+Semua memakai format error yang sama. Detail parameter lengkap ada di Swagger (`/docs`).
+
+| Endpoint | Akses | Keterangan |
+|---|---|---|
+| `GET /api/tahun` | publik | Tambahan kunci `catatan`: `{"2025": "Data simulasi ..."}` (hanya tahun yang punya catatan). `PUT/DELETE /api/tahun/{tahun}/catatan` (admin) mengatur catatan. |
+| `GET /api/heatmap?tahun&dari&sampai&jenis&polsek&sumber&grid` | publik | `{grid_derajat, total_titik, maks_bobot, per_sumber:{laporan,berita,simulasi}, data:[{lat,lng,bobot}]}`. Titik dirangkum per sel grid (min 0.0005 derajat). |
+| `GET /api/titik/sebaran?...&grid` | publik | Titik per sel grid + `rincian:[{nama_jenis,jumlah}]` dan `per_sumber`. |
+| `GET /api/berita-kejadian?tahun&dari&sampai&jenis&polsek&limit` | publik | GeoJSON Point. `properties`: `id_titik, tanggal, id_jenis, nama_jenis, id_polsek, nama_polsek, sumber_data, akurasi, berita:[{id_berita, judul, sumber, url, tanggal_terbit, ringkasan}]`. Hanya titik yang punya berita. |
+| `GET/POST /api/titik`, `PUT/DELETE /api/titik/{id}` | login (hapus: admin) | Titik kejadian persis. Field: `lat, lng, id_jenis, tanggal, id_polsek?, sumber (laporan/berita/simulasi), akurasi (tepat/desa/kecamatan)`; `POST` boleh menyertakan `berita:{judul,sumber,url,tanggal_terbit?,ringkasan?}`. Respons memuat `nama_polsek, nama_jenis, jumlah_berita`. |
+| `POST /api/titik/import` | operator/admin | CSV `lat,lng,jenis,tanggal` + kolom opsional `sumber, akurasi, polsek, judul_berita, sumber_berita, url_berita, tanggal_berita, ringkasan`; `dry_run`. |
+| `GET/POST /api/titik/{id}/berita`, `PUT/DELETE /api/berita/{id}` | login (hapus: admin) | Berita pada satu titik. `url` wajib `http://` atau `https://`; pasangan (titik, url) unik. |
+| `GET /api/spasial/titik`, `/terdekat`, `/bbox` | publik | Cek lokasi, Polsek terdekat, Polsek dalam kotak peta. |
+| `GET /api/export?format=csv\|xlsx&tahun&jenis&polsek` | publik | Rekap Polsek x jenis, kolom sama dengan format impor. |
+| `POST/PUT/DELETE /api/polsek`, `POST /api/polsek/geojson`, `PUT /api/polsek/{id}/poligon`, `POST/PUT/DELETE /api/jenis` | admin | Master data dan poligon wilayah. |
+| `GET /api/audit` | admin | Riwayat perubahan (`entitas`: kasus, titik, berita, tahun, pengguna, polsek, jenis, poligon). |
+| `POST /api/auth/ubah-password`, `GET/POST/PUT/DELETE /api/pengguna` | login / admin | Ganti password sendiri; kelola akun. |
+
+`PUT /api/kasus/{id}` boleh mengubah semua field dan membalas tambahan `diubah` / `diabaikan`.
+`POST /api/auth/login` membalas `429 TERLALU_BANYAK_PERCOBAAN` (+ header `Retry-After`) setelah terlalu banyak percobaan gagal.

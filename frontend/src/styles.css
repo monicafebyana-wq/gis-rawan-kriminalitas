@@ -545,3 +545,4 @@ a:hover { color: var(--t-aksen); }
   .konten > * { animation: none; }
   .btn, .menu-item, .card { transition: none; }
 }
+.popup-berita { min-width: 220px; max-width: 300px; }

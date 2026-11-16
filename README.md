@@ -106,6 +106,9 @@ Skema ada di `backend/db/migrations/` dan dijalankan berurutan oleh `run.sh` (ya
 | `001_buat_skema.sql` | 5 tabel: `polsek` (+ kolom `geom` PostGIS), `jenis_kejahatan`, `kasus_kejahatan`, `zona_kerawanan`, `pengguna` + indeks & constraint |
 | `002_fungsi_zonasi.sql` | `hitung_kategori_zona()`, `refresh_zona_kerawanan(tahun)`, `sinkronkan_urutan_id()`, view `v_zona_polsek` |
 | `003_seed_jenis_kejahatan.sql` | Data 18 jenis kejahatan |
+| `004_audit_log.sql` | Tabel `audit_log` (riwayat perubahan) |
+| `005_titik_kejadian.sql` | Tabel `titik_kejadian` (lat/lng per kejadian, untuk heatmap) |
+| `006_berita_sumber_catatan.sql` | Kolom `sumber_data` + `akurasi` pada titik, tabel `berita_kejadian`, tabel `catatan_tahun` (catatan 2025/2026 = simulasi). Titik lama otomatis ditandai `simulasi`. |
 
 Menjalankan (database harus sudah menyala):
 ```
@@ -146,6 +149,21 @@ Hasil yang benar: tabel verifikasi berisi 6 baris berstatus `LULUS` dan di akhir
 - Aman dijalankan berulang: data tahun yang sama diganti, tidak digandakan. Kolom `geom` (poligon) tidak ikut terhapus.
 - Kalau data memang berubah (mis. tahun baru dengan total berbeda): `sh /seed/import.sh <total_baru>`.
 - Cek manual: `docker exec -it gis_kriminalitas_db psql -U postgres -d gis_kriminalitas -c "SELECT sum(jumlah) FROM kasus_kejahatan"` → `1163`.
+
+## Data 2025–2026 (simulasi) dan Titik Berita
+
+Atas saran dosen, data diperluas ke 2025 dan 2026 dan titik kejadian dilengkapi berita. **Datanya perlu dibedakan dengan jujur:**
+
+| Data | Status | Lokasi |
+|---|---|---|
+| Rekap 2024 | asli (`data/rekap_kriminalitas_2024.csv`) | |
+| Rekap 2025 dan 2026 (Jan–Okt) | **simulasi** untuk pengembangan, bukan data resmi | `data/simulasi/` |
+| Titik kejadian simulasi 2024–2026 (heatmap) | **simulasi** | `data/simulasi/titik_simulasi_2024_2026.csv` |
+| Titik kejadian + berita (16 kejadian nyata, 2025–2026) | nyata, **lokasi perkiraan di tingkat kecamatan** | `data/berita/titik_berita_2025_2026.csv` |
+
+Peta dan Dashboard otomatis menampilkan peringatan untuk tahun yang punya catatan (tabel `catatan_tahun`) dan untuk titik bersumber simulasi.
+Cara memasukkan data dan batasannya: lihat `data/simulasi/README.md` dan `data/berita/README.md`.
+Untuk produksi, ganti data simulasi dengan data resmi dari kepolisian, lalu hapus catatan tahunnya (Master Data -> Catatan tahun).
 
 ## Impor Poligon Wilayah (PostGIS)
 

@@ -16,7 +16,7 @@ def mock(nama):
 
 # ---------------------------------------------------------------- GET /api/polsek
 def test_polsek_featurecollection(client, db_hidup):
-    j = client.get("/api/polsek").json()
+    j = client.get("/api/polsek?tahun=2024").json()
     assert j["type"] == "FeatureCollection" and len(j["features"]) == 27
     p = [f["properties"] for f in j["features"]]
     assert sum(x["total_kasus"] for x in p) == 1163
@@ -36,13 +36,13 @@ def test_polsek_geometri_dan_pusat(client, db_hidup):
 
 
 def test_polsek_filter_jenis_zona_tetap_dari_total(client, db_hidup):
-    j = client.get("/api/polsek?jenis=1,16&polsek=1").json()
+    j = client.get("/api/polsek?jenis=1,16&polsek=1&tahun=2024").json()
     p = j["features"][0]["properties"]
     assert (p["total_kasus"], p["total_semua_jenis"], p["kategori_zona"]) == (21, 74, "tinggi")   # 4 + 17; zona dari 74
 
 
 def test_polsek_filter_zona_dan_polsek(client, db_hidup):
-    n = lambda q: len(client.get(f"/api/polsek?{q}").json()["features"])
+    n = lambda q: len(client.get(f"/api/polsek?tahun=2024&{q}").json()["features"])
     assert n("zona=tinggi") == 10 and n("zona=tinggi,sedang") == 17 and n("polsek=1,5") == 2 and n("zona=rendah&polsek=5") == 0
 
 
@@ -61,7 +61,7 @@ def test_polsek_error(client, db_hidup, query, status):
 
 # ---------------------------------------------------------------- GET /api/polsek/{id}
 def test_detail_polsek(client, db_hidup):
-    j = client.get("/api/polsek/1").json()
+    j = client.get("/api/polsek/1?tahun=2024").json()
     assert (j["nama_polsek"], j["total_kasus"], j["kategori_zona"]) == ("Bale Endah", 74, "tinggi")
     r = j["rincian_jenis"]
     assert sum(x["jumlah"] for x in r) == 74 and all(x["jumlah"] > 0 for x in r)
@@ -83,7 +83,7 @@ def test_kasus_default(client, db_hidup):
 
 
 def test_kasus_filter_dan_paginasi(client, db_hidup):
-    g = lambda q: client.get(f"/api/kasus?{q}").json()
+    g = lambda q: client.get(f"/api/kasus?{q}" + ("" if "tahun=" in q else "&tahun=2024")).json()
     assert g("polsek=1")["total_data"] == 18 and g("jenis=1")["total_data"] == 27
     satu = g("polsek=1&jenis=1")
     assert satu["total_data"] == 1 and satu["data"][0]["jumlah"] == 4
@@ -99,7 +99,7 @@ def test_kasus_error_400(client, db_hidup, query):
 
 # ---------------------------------------------------------------- GET /api/statistik
 def test_statistik(client, db_hidup):
-    j = client.get("/api/statistik").json()
+    j = client.get("/api/statistik?tahun=2024").json()
     assert (j["tahun"], j["total_kasus"], j["jumlah_polsek"], j["jumlah_jenis"]) == (2024, 1163, 27, 18)
     assert j["polsek_tertinggi"] == {"id_polsek": 5, "nama_polsek": "Cicalengka", "total_kasus": 76}
     assert j["polsek_terendah"]["nama_polsek"] == "Nagreg" and j["polsek_terendah"]["total_kasus"] == 5
@@ -121,28 +121,30 @@ def test_statistik_top_dan_error(client, db_hidup):
 
 def test_tren(client, db_hidup):
     g = lambda q="": client.get(f"/api/statistik/tren?{q}").json()["data"]
-    assert g() == [{"tahun": 2024, "total_kasus": 1163}]
+    assert g()[0] == {"tahun": 2024, "total_kasus": 1163}                 # urut tahun naik; 2025/2026 = data simulasi
     assert g("polsek=5")[0]["total_kasus"] == 76 and g("jenis=1")[0]["total_kasus"] == 235
 
 
 # ---------------------------------------------------------------- kontrak = data mock Dhea
 def test_kontrak_sama_dengan_mock(client, db_hidup):
     """Bentuk respons asli harus sama dengan data/mock (yang dipakai front end)."""
-    a, m = client.get("/api/statistik").json(), mock("statistik.json")
+    a, m = client.get("/api/statistik?tahun=2024").json(), mock("statistik.json")
     assert set(a) == set(m)
     for k in ("tahun", "total_kasus", "jumlah_polsek", "jumlah_jenis", "polsek_tertinggi", "polsek_terendah", "distribusi_zona", "top_jenis", "persen_top_jenis", "per_jenis"):
         assert a[k] == m[k], k
     assert {tuple(x.items()) for x in a["per_polsek"]} == {tuple(x.items()) for x in m["per_polsek"]}
 
-    assert client.get("/api/polsek/1").json() == mock("polsek_detail_1.json")
+    assert client.get("/api/polsek/1?tahun=2024").json() == mock("polsek_detail_1.json")
     assert client.get("/api/jenis").json() == mock("jenis.json")
-    assert client.get("/api/tahun").json() == mock("tahun.json")
-    assert client.get("/api/statistik/tren").json()["data"] == mock("tren.json")["data"]
+    t, mt = client.get("/api/tahun").json(), mock("tahun.json")
+    assert set(t) == set(mt) and isinstance(t["catatan"], dict)           # `catatan` (peringatan per tahun) boleh berbeda isinya
+    assert 2024 in t["data"] and t["terbaru"] == t["data"][-1]
+    assert client.get("/api/statistik/tren").json()["data"][0] == mock("tren.json")["data"][0]
 
-    k, mk = client.get("/api/kasus?limit=20").json(), mock("kasus.json")
+    k, mk = client.get("/api/kasus?limit=20&tahun=2024").json(), mock("kasus.json")
     assert k == mk
 
-    for nama, q in (("polsek.json", ""), ("polsek_filter_jenis_1_16.json", "?jenis=1,16")):
+    for nama, q in (("polsek.json", "?tahun=2024"), ("polsek_filter_jenis_1_16.json", "?jenis=1,16&tahun=2024")):
         api = {f["properties"]["id_polsek"]: f["properties"] for f in client.get(f"/api/polsek{q}").json()["features"]}
         for f in mock(nama)["features"]:
             mp = f["properties"]; ap = api[mp["id_polsek"]]

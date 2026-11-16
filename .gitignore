@@ -1,0 +1,10 @@
+# Dependensi & artefak lokal
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Rahasia: JANGAN di-commit (salin dari .env.example bila ada)
+.env

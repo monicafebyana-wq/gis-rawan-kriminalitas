@@ -12,7 +12,7 @@ router = APIRouter(prefix="/audit", tags=["Audit"])
 @router.get("", summary="Riwayat perubahan data (khusus admin)")
 def daftar_audit(
     conn: Conn, user: Admin,
-    entitas: str | None = Query(None, max_length=30, description="kasus / pengguna / polsek / jenis / poligon"),
+    entitas: str | None = Query(None, max_length=30, description="kasus / titik / berita / pengguna / polsek / jenis / poligon / tahun"),
     aksi: str | None = Query(None, max_length=30, description="tambah / ubah / hapus / impor / ubah_password / ..."),
     username: str | None = Query(None, max_length=50),
     dari: date | None = Query(None, description="YYYY-MM-DD (termasuk)"),

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useAuth } from '../auth.jsx';
 
-// Master Data (khusus admin): kelola daftar Polsek, poligon wilayahnya, dan jenis kejahatan.
+// Master Data (khusus admin): kelola daftar Polsek, poligon wilayahnya, jenis kejahatan, dan catatan per tahun data.
 // Endpoint: POST/PUT/DELETE /api/polsek, POST /api/polsek/geojson, POST/PUT/DELETE /api/jenis.
 // Aturan dari server: Polsek yang masih punya data kasus dan jenis baku (dipakai impor CSV) tidak bisa dihapus.
 
@@ -388,6 +388,120 @@ function TabJenis({ token, setPesan }) {
   );
 }
 
+// ---------------------------------------------------------------- Tab Catatan tahun
+// Catatan per tahun data ditampilkan sebagai peringatan di Peta dan Dashboard (mis. "Data 2025 adalah SIMULASI").
+// Hapus catatannya setelah data tahun itu diganti dengan data resmi.
+function TabCatatan({ token, setPesan }) {
+  const [tahunAda, setTahunAda] = useState([]);
+  const [catatan, setCatatan] = useState({});
+  const [memuat, setMemuat] = useState(true);
+  const [form, setForm] = useState({ tahun: '', catatan: '' });
+
+  const muat = useCallback(() => {
+    setMemuat(true);
+    return api
+      .tahun()
+      .then((r) => {
+        setTahunAda(r.data);
+        setCatatan(r.catatan || {});
+      })
+      .catch((e) => setPesan({ tipe: 'danger', teks: e.message }))
+      .finally(() => setMemuat(false));
+  }, [setPesan]);
+
+  useEffect(() => {
+    muat();
+  }, [muat]);
+
+  const semuaTahun = [...new Set([...tahunAda.map(String), ...Object.keys(catatan)])].sort();
+
+  async function simpan(e) {
+    e.preventDefault();
+    setPesan(null);
+    try {
+      await api.aturCatatanTahun(token, Number(form.tahun), form.catatan.trim());
+      setPesan({ tipe: 'success', teks: `Catatan tahun ${form.tahun} disimpan.` });
+      setForm({ tahun: '', catatan: '' });
+      muat();
+    } catch (err) {
+      setPesan({ tipe: 'danger', teks: galat(err, 'Gagal menyimpan catatan: ') });
+    }
+  }
+
+  async function hapus(tahun) {
+    if (!window.confirm(`Hapus catatan tahun ${tahun}?\n\nPeringatannya tidak akan tampil lagi di Peta dan Dashboard.`)) return;
+    setPesan(null);
+    try {
+      await api.hapusCatatanTahun(token, Number(tahun));
+      setPesan({ tipe: 'success', teks: `Catatan tahun ${tahun} dihapus.` });
+      muat();
+    } catch (err) {
+      setPesan({ tipe: 'danger', teks: galat(err, 'Gagal menghapus catatan: ') });
+    }
+  }
+
+  return (
+    <div className="row g-3">
+      <div className="col-12 col-xl-7">
+        <div className="card">
+          <div className="card-body">
+            <h2 className="h5">Catatan per tahun</h2>
+            <p className="small text-secondary">
+              Dipakai untuk memberi tahu pengunjung bahwa data tahun tertentu belum resmi (mis. simulasi) atau baru sebagian.
+            </p>
+            <div className="table-responsive">
+              <table className="table table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Tahun</th>
+                    <th>Catatan</th>
+                    <th className="text-end">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {memuat && <tr><td colSpan="3" className="text-center text-secondary py-3">Memuat…</td></tr>}
+                  {!memuat && semuaTahun.map((t) => (
+                    <tr key={t}>
+                      <td>{t}{!tahunAda.map(String).includes(t) && <span className="small text-secondary"> (belum ada data)</span>}</td>
+                      <td>{catatan[t] || <span className="text-secondary">—</span>}</td>
+                      <td className="text-end">
+                        <div className="d-flex flex-column flex-sm-row justify-content-end gap-1">
+                          <button type="button" className="btn btn-outline-primary btn-sm"
+                            onClick={() => setForm({ tahun: t, catatan: catatan[t] || '' })}>Ubah</button>
+                          {catatan[t] && (
+                            <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => hapus(t)}>Hapus</button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="col-12 col-xl-5">
+        <form className="card card-body" onSubmit={simpan}>
+          <h2 className="h5">Atur catatan</h2>
+          <div className="mb-2">
+            <label className="form-label small fw-semibold" htmlFor="c-tahun">Tahun</label>
+            <input id="c-tahun" type="number" className="form-control form-control-sm" required min="2000" max="2100"
+              value={form.tahun} onChange={(e) => setForm({ ...form, tahun: e.target.value })} />
+          </div>
+          <div className="mb-3">
+            <label className="form-label small fw-semibold" htmlFor="c-teks">Catatan (3-500 karakter)</label>
+            <textarea id="c-teks" rows={3} className="form-control form-control-sm" required minLength={3} maxLength={500}
+              placeholder="mis. Data simulasi untuk pengembangan, bukan data resmi."
+              value={form.catatan} onChange={(e) => setForm({ ...form, catatan: e.target.value })} />
+          </div>
+          <button className="btn btn-primary btn-sm" type="submit">Simpan catatan</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function MasterDataPage() {
   const { sesi } = useAuth();
   const [tab, setTab] = useState('polsek');
@@ -402,7 +516,7 @@ export default function MasterDataPage() {
       <h1 className="h3 mb-3">Master Data</h1>
       <Pesan pesan={pesan} tutup={() => setPesan(null)} />
       <ul className="nav nav-tabs mb-3">
-        {[['polsek', 'Polsek & poligon'], ['jenis', 'Jenis kejahatan']].map(([k, teks]) => (
+        {[['polsek', 'Polsek & poligon'], ['jenis', 'Jenis kejahatan'], ['catatan', 'Catatan tahun']].map(([k, teks]) => (
           <li className="nav-item" key={k}>
             <button type="button" className={`nav-link${tab === k ? ' active' : ''}`} onClick={() => { setTab(k); setPesan(null); }}>
               {teks}
@@ -410,7 +524,9 @@ export default function MasterDataPage() {
           </li>
         ))}
       </ul>
-      {tab === 'polsek' ? <TabPolsek token={sesi.token} setPesan={setPesan} /> : <TabJenis token={sesi.token} setPesan={setPesan} />}
+      {tab === 'polsek' && <TabPolsek token={sesi.token} setPesan={setPesan} />}
+      {tab === 'jenis' && <TabJenis token={sesi.token} setPesan={setPesan} />}
+      {tab === 'catatan' && <TabCatatan token={sesi.token} setPesan={setPesan} />}
     </>
   );
 }

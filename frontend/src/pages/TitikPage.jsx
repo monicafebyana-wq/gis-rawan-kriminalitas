@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api } from '../api.js';
@@ -6,11 +6,133 @@ import { useAuth } from '../auth.jsx';
 
 // Titik Kejadian (admin/operator): koordinat tiap kejadian untuk heatmap di halaman Peta.
 // Data ini terpisah dari rekap kasus, jadi tidak mengubah jumlah kasus maupun warna zona.
-// Endpoint: GET/POST /api/titik, PUT/DELETE /api/titik/{id}, POST /api/titik/import.
+// Tiap titik punya sumber (laporan / berita / simulasi), akurasi lokasi, dan boleh dilengkapi berita (tautan).
+// Endpoint: GET/POST /api/titik, PUT/DELETE /api/titik/{id}, POST /api/titik/import, /api/titik/{id}/berita, /api/berita/{id}.
 const BATAS = 20;
 const PUSAT_AWAL = [-7.05, 107.55];
 const hariIni = () => new Date().toISOString().slice(0, 10);
-const FORM_KOSONG = () => ({ lat: '', lng: '', id_jenis: '', tanggal: hariIni(), id_polsek: '' });
+const FORM_KOSONG = () => ({ lat: '', lng: '', id_jenis: '', tanggal: hariIni(), id_polsek: '', sumber: 'laporan', akurasi: 'tepat' });
+const BERITA_KOSONG = { judul: '', sumber: '', url: '', tanggal_terbit: '', ringkasan: '' };
+const SUMBER = { laporan: 'Laporan', berita: 'Berita', simulasi: 'Simulasi' };
+const WARNA_SUMBER = { laporan: 'success', berita: 'info', simulasi: 'secondary' };
+const AKURASI = { tepat: 'Tepat (koordinat TKP)', desa: 'Perkiraan desa', kecamatan: 'Perkiraan kecamatan' };
+const aman = (u) => /^https?:\/\//i.test(u); // tautan hanya http/https
+
+// Isian berita -> body API (kolom opsional yang kosong tidak dikirim).
+function bodyBerita(b) {
+  const body = { judul: b.judul.trim(), sumber: b.sumber.trim(), url: b.url.trim() };
+  if (b.tanggal_terbit) body.tanggal_terbit = b.tanggal_terbit;
+  if (b.ringkasan.trim()) body.ringkasan = b.ringkasan.trim();
+  return body;
+}
+
+function BeritaFields({ nilai, ubah, awalan }) {
+  return (
+    <>
+      <div className="mb-2">
+        <label className="form-label small fw-semibold" htmlFor={`${awalan}-judul`}>Judul ringkas</label>
+        <input id={`${awalan}-judul`} className="form-control form-control-sm" maxLength={300} value={nilai.judul}
+          placeholder="tulis dengan kalimat sendiri" onChange={(e) => ubah({ ...nilai, judul: e.target.value })} />
+      </div>
+      <div className="row g-2 mb-2">
+        <div className="col-6">
+          <label className="form-label small fw-semibold" htmlFor={`${awalan}-media`}>Media</label>
+          <input id={`${awalan}-media`} className="form-control form-control-sm" maxLength={100} value={nilai.sumber}
+            placeholder="mis. ANTARA" onChange={(e) => ubah({ ...nilai, sumber: e.target.value })} />
+        </div>
+        <div className="col-6">
+          <label className="form-label small fw-semibold" htmlFor={`${awalan}-tgl`}>Tanggal terbit</label>
+          <input id={`${awalan}-tgl`} type="date" className="form-control form-control-sm" value={nilai.tanggal_terbit}
+            onChange={(e) => ubah({ ...nilai, tanggal_terbit: e.target.value })} />
+        </div>
+      </div>
+      <div className="mb-2">
+        <label className="form-label small fw-semibold" htmlFor={`${awalan}-url`}>Tautan berita</label>
+        <input id={`${awalan}-url`} type="url" className="form-control form-control-sm" maxLength={2000} value={nilai.url}
+          placeholder="https://…" onChange={(e) => ubah({ ...nilai, url: e.target.value })} />
+      </div>
+      <div className="mb-2">
+        <label className="form-label small fw-semibold" htmlFor={`${awalan}-ring`}>Ringkasan (opsional)</label>
+        <textarea id={`${awalan}-ring`} rows={2} className="form-control form-control-sm" maxLength={600} value={nilai.ringkasan}
+          placeholder="1-2 kalimat dengan kata sendiri (jangan menyalin teks berita)" onChange={(e) => ubah({ ...nilai, ringkasan: e.target.value })} />
+      </div>
+    </>
+  );
+}
+
+// Daftar berita satu titik (mode ubah): tambah berita, hapus (admin).
+function BeritaTitik({ token, idTitik, adalahAdmin, onUbah }) {
+  const [daftar, setDaftar] = useState([]);
+  const [baru, setBaru] = useState(BERITA_KOSONG);
+  const [galat, setGalat] = useState('');
+  const [sibuk, setSibuk] = useState(false);
+
+  const muat = useCallback(
+    () => api.daftarBerita(token, idTitik).then((r) => setDaftar(r.data)).catch((e) => setGalat(e.message)),
+    [token, idTitik]
+  );
+  useEffect(() => {
+    muat();
+  }, [muat]);
+
+  async function tambah(e) {
+    e.preventDefault();
+    setGalat('');
+    setSibuk(true);
+    try {
+      await api.tambahBerita(token, idTitik, bodyBerita(baru));
+      setBaru(BERITA_KOSONG);
+      await muat();
+      onUbah();
+    } catch (err) {
+      setGalat(`Gagal menambah berita: ${err.message}${err.status === 400 && err.detail?.length ? ` (${err.detail.join(', ')})` : ''}`);
+    } finally {
+      setSibuk(false);
+    }
+  }
+
+  async function hapus(b) {
+    if (!window.confirm(`Hapus berita ini dari titik?\n\n${b.judul}`)) return;
+    setGalat('');
+    try {
+      await api.hapusBerita(token, b.id_berita);
+      await muat();
+      onUbah();
+    } catch (err) {
+      setGalat(`Gagal menghapus berita: ${err.message}`);
+    }
+  }
+
+  return (
+    <div className="card card-body">
+      <h2 className="h5">Berita titik ini</h2>
+      {daftar.length === 0 && <p className="small text-secondary">Belum ada berita.</p>}
+      {daftar.map((b) => (
+        <div className="mb-2 pb-2 border-bottom" key={b.id_berita}>
+          {aman(b.url) ? (
+            <a href={b.url} target="_blank" rel="noopener noreferrer" className="fw-semibold">{b.judul}</a>
+          ) : (
+            <span className="fw-semibold">{b.judul}</span>
+          )}
+          <div className="small text-secondary">{b.sumber}{b.tanggal_terbit && ` · ${b.tanggal_terbit}`}</div>
+          {b.ringkasan && <div className="small">{b.ringkasan}</div>}
+          {adalahAdmin && (
+            <button type="button" className="btn btn-outline-danger btn-sm mt-1" onClick={() => hapus(b)}>Hapus berita</button>
+          )}
+        </div>
+      ))}
+      {galat && <div className="alert alert-danger py-2 small" role="alert">{galat}</div>}
+      <form onSubmit={tambah}>
+        <div className="fw-semibold small mb-2">Tambah berita</div>
+        <BeritaFields nilai={baru} ubah={setBaru} awalan="tbe" />
+        <button className="btn btn-outline-primary btn-sm" type="submit"
+          disabled={sibuk || !baru.judul.trim() || !baru.sumber.trim() || !baru.url.trim()}>
+          {sibuk ? 'Menyimpan…' : 'Tambah berita'}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 function KlikPilih({ onPilih }) {
   useMapEvents({ click: (e) => onPilih(e.latlng.lat, e.latlng.lng) });
@@ -26,7 +148,7 @@ export default function TitikPage() {
   const [daftarJenis, setDaftarJenis] = useState([]);
   const [daftarPolsek, setDaftarPolsek] = useState([]);
 
-  const [filter, setFilter] = useState({ tahun: '', jenis: '', polsek: '' });
+  const [filter, setFilter] = useState({ tahun: '', jenis: '', polsek: '', sumber: '', ada_berita: '' });
   const [halaman, setHalaman] = useState(1);
   const [hasil, setHasil] = useState(null);
   const [memuat, setMemuat] = useState(false);
@@ -34,6 +156,7 @@ export default function TitikPage() {
   const [pesan, setPesan] = useState(null);
 
   const [form, setForm] = useState(FORM_KOSONG);
+  const [beritaBaru, setBeritaBaru] = useState(BERITA_KOSONG); // berita opsional saat menambah titik
   const [editId, setEditId] = useState(null);
   const [awal, setAwal] = useState(null); // nilai asli titik yang sedang diubah
   const [sedangSimpan, setSedangSimpan] = useState(false);
@@ -71,7 +194,7 @@ export default function TitikPage() {
   }, [token, filter, halaman, versi]);
 
   function ubahFilter(kunci, nilai) {
-    setFilter({ ...filter, [kunci]: nilai });
+    setFilter((f) => ({ ...f, [kunci]: nilai })); // bentuk fungsi: aman bila dua filter berubah berurutan
     setHalaman(1);
   }
 
@@ -84,7 +207,7 @@ export default function TitikPage() {
   function mulaiUbah(t) {
     setEditId(t.id_titik);
     setAwal(t);
-    setForm({ lat: String(t.lat), lng: String(t.lng), id_jenis: String(t.id_jenis), tanggal: t.tanggal, id_polsek: '' });
+    setForm({ lat: String(t.lat), lng: String(t.lng), id_jenis: String(t.id_jenis), tanggal: t.tanggal, id_polsek: '', sumber: t.sumber_data, akurasi: t.akurasi });
     setPesan(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -112,6 +235,8 @@ export default function TitikPage() {
         if (Number(form.id_jenis) !== awal.id_jenis) body.id_jenis = Number(form.id_jenis);
         if (form.tanggal !== awal.tanggal) body.tanggal = form.tanggal;
         if (form.id_polsek) body.id_polsek = Number(form.id_polsek);
+        if (form.sumber !== awal.sumber_data) body.sumber = form.sumber;
+        if (form.akurasi !== awal.akurasi) body.akurasi = form.akurasi;
         if (Object.keys(body).length === 0) {
           setPesan({ tipe: 'danger', teks: 'Belum ada yang diubah.' });
           return;
@@ -120,16 +245,21 @@ export default function TitikPage() {
         setPesan({ tipe: 'success', teks: 'Titik kejadian diperbarui.' });
         batalUbah();
       } else {
-        const body = { lat, lng, id_jenis: Number(form.id_jenis), tanggal: form.tanggal };
+        const body = { lat, lng, id_jenis: Number(form.id_jenis), tanggal: form.tanggal, sumber: form.sumber, akurasi: form.akurasi };
         if (form.id_polsek) body.id_polsek = Number(form.id_polsek);
+        if (beritaBaru.judul.trim() || beritaBaru.sumber.trim() || beritaBaru.url.trim()) body.berita = bodyBerita(beritaBaru);
+        if (form.sumber === 'berita' && !body.berita) {
+          return setPesan({ tipe: 'danger', teks: 'Titik bersumber "Berita" wajib diisi beritanya (judul, media, dan tautan).' });
+        }
         const r = await api.tambahTitik(token, body);
+        setBeritaBaru(BERITA_KOSONG);
         setPesan({
           tipe: 'success',
           teks: r.nama_polsek
             ? `Titik disimpan, wilayah terdeteksi: Polsek ${r.nama_polsek}.`
             : 'Titik disimpan. Lokasinya di luar semua wilayah Polsek (tetap tampil di heatmap).',
         });
-        setForm({ ...FORM_KOSONG(), id_jenis: form.id_jenis, tanggal: form.tanggal }); // siap input berikutnya
+        setForm({ ...FORM_KOSONG(), id_jenis: form.id_jenis, tanggal: form.tanggal, sumber: form.sumber, akurasi: form.akurasi }); // siap input berikutnya
       }
       muatUlang();
     } catch (err) {
@@ -182,8 +312,9 @@ export default function TitikPage() {
       <div className="mb-3">
         <h1 className="h3 mb-1">Titik Kejadian</h1>
         <div className="small text-secondary">
-          Lokasi tiap kejadian untuk <strong>heatmap</strong> di halaman Peta. Terpisah dari rekap kasus: menambah titik
-          tidak mengubah jumlah kasus maupun warna zona.
+          Lokasi tiap kejadian untuk <strong>heatmap</strong> dan lapisan <strong>berita</strong> di halaman Peta. Terpisah dari rekap kasus:
+          menambah titik tidak mengubah jumlah kasus maupun warna zona. Tandai sumbernya dengan jujur: data contoh harus bersumber
+          "Simulasi".
           {!adalahAdmin && ' Operator boleh menambah dan mengubah, tidak boleh menghapus.'}
         </div>
       </div>
@@ -222,6 +353,21 @@ export default function TitikPage() {
                     {daftarJenis.map((j) => <option key={j.id_jenis} value={j.id_jenis}>{j.nama_jenis}</option>)}
                   </select>
                 </div>
+                <div className="col-6 col-md-3">
+                  <label className="form-label small fw-semibold" htmlFor="tk-sumber">Sumber</label>
+                  <select id="tk-sumber" className="form-select form-select-sm" value={filter.sumber} onChange={(e) => ubahFilter('sumber', e.target.value)}>
+                    <option value="">Semua</option>
+                    {Object.entries(SUMBER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="col-6 col-md-3">
+                  <label className="form-label small fw-semibold" htmlFor="tk-berita">Berita</label>
+                  <select id="tk-berita" className="form-select form-select-sm" value={filter.ada_berita} onChange={(e) => ubahFilter('ada_berita', e.target.value)}>
+                    <option value="">Semua</option>
+                    <option value="true">Punya berita</option>
+                    <option value="false">Belum ada berita</option>
+                  </select>
+                </div>
               </div>
 
               <div className="table-responsive">
@@ -230,6 +376,7 @@ export default function TitikPage() {
                     <tr>
                       <th>Tanggal</th>
                       <th>Jenis</th>
+                      <th className="d-none d-lg-table-cell">Sumber</th>
                       <th className="d-none d-md-table-cell">Polsek</th>
                       <th className="d-none d-sm-table-cell">Koordinat</th>
                       <th className="text-end">Aksi</th>
@@ -237,12 +384,16 @@ export default function TitikPage() {
                   </thead>
                   <tbody>
                     {hasil && hasil.data.length === 0 && (
-                      <tr><td colSpan="5" className="text-center text-secondary py-3">Belum ada titik yang cocok.</td></tr>
+                      <tr><td colSpan="6" className="text-center text-secondary py-3">Belum ada titik yang cocok.</td></tr>
                     )}
                     {hasil && hasil.data.map((t) => (
                       <tr key={t.id_titik} className={editId === t.id_titik ? 'table-warning' : ''}>
                         <td>{t.tanggal}</td>
                         <td>{t.nama_jenis}</td>
+                        <td className="d-none d-lg-table-cell">
+                          <span className={`badge text-bg-${WARNA_SUMBER[t.sumber_data] || 'secondary'}`}>{SUMBER[t.sumber_data] || t.sumber_data}</span>
+                          {t.jumlah_berita > 0 && <>{' '}<span className="small text-secondary">{t.jumlah_berita} berita</span></>}
+                        </td>
                         <td className="d-none d-md-table-cell">{t.nama_polsek || <span className="text-secondary" title="Di luar semua wilayah Polsek">—</span>}</td>
                         <td className="d-none d-sm-table-cell small">{t.lat.toFixed(5)}, {t.lng.toFixed(5)}</td>
                         <td className="text-end">
@@ -323,6 +474,28 @@ export default function TitikPage() {
               </div>
             </div>
 
+            <div className="row g-2 mb-3">
+              <div className="col-5">
+                <label className="form-label small fw-semibold" htmlFor="tt-sumber">Sumber data</label>
+                <select id="tt-sumber" className="form-select form-select-sm" value={form.sumber} onChange={(e) => setForm({ ...form, sumber: e.target.value })}>
+                  {Object.entries(SUMBER).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </div>
+              <div className="col-7">
+                <label className="form-label small fw-semibold" htmlFor="tt-akurasi">Akurasi lokasi</label>
+                <select id="tt-akurasi" className="form-select form-select-sm" value={form.akurasi} onChange={(e) => setForm({ ...form, akurasi: e.target.value })}>
+                  {Object.entries(AKURASI).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {!editId && (
+              <details className="mb-3" open={form.sumber === 'berita'}>
+                <summary className="small fw-semibold mb-2">Lengkapi dengan berita (opsional)</summary>
+                <BeritaFields nilai={beritaBaru} ubah={setBeritaBaru} awalan="tb" />
+              </details>
+            )}
+
             <div className="d-flex gap-2">
               <button className="btn btn-primary btn-sm" type="submit" disabled={sedangSimpan}>
                 {labelSimpan(sedangSimpan, editId)}
@@ -331,12 +504,16 @@ export default function TitikPage() {
             </div>
           </form>
 
+          {editId && <BeritaTitik key={editId} token={token} idTitik={editId} adalahAdmin={adalahAdmin} onUbah={muatUlang} />}
+
           <div className="card">
             <div className="card-body">
               <h2 className="h5">Impor titik dari CSV</h2>
               <p className="small text-secondary">
                 Kolom: <code>lat, lng, jenis, tanggal</code>. <code>jenis</code> boleh kode (CURAT), nama, atau id.
                 Tanggal <code>YYYY-MM-DD</code> atau <code>DD/MM/YYYY</code>. Pemisah koma atau titik koma. Maks. 5 MB / 20.000 baris.
+                Kolom opsional: <code>sumber</code> (laporan/berita/simulasi), <code>akurasi</code> (tepat/desa/kecamatan),{' '}
+                <code>polsek</code>, dan untuk berita: <code>judul_berita, sumber_berita, url_berita, tanggal_berita, ringkasan</code>.
                 Semua baris valid atau tidak ada yang disimpan.
               </p>
               <input type="file" accept=".csv,text/csv" className="form-control form-control-sm mb-2"
@@ -354,7 +531,7 @@ export default function TitikPage() {
               {hasilImpor && hasilImpor.tipe === 'ok' && (
                 <div className="alert alert-success mt-3 mb-0 py-2 small" role="status">
                   <strong>{hasilImpor.hanyaPeriksa ? 'Berkas valid (belum disimpan).' : 'Berhasil disimpan.'}</strong>
-                  <div>{hasilImpor.data.baris_dibaca} baris · {hasilImpor.data.tersimpan} tersimpan · {hasilImpor.data.tanpa_polsek} di luar wilayah Polsek</div>
+                  <div>{hasilImpor.data.baris_dibaca} baris · {hasilImpor.data.tersimpan} tersimpan · {hasilImpor.data.tanpa_polsek} di luar wilayah Polsek · {hasilImpor.data.dengan_berita || 0} dengan berita</div>
                   {hasilImpor.data.peringatan.length > 0 && (
                     <ul className="mb-0 mt-1 ps-3">{hasilImpor.data.peringatan.map((w, i) => <li key={i}>{w}</li>)}</ul>
                   )}

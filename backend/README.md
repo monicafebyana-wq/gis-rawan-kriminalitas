@@ -48,7 +48,7 @@ backend/
 │     ├─ auth.py                   # SUDAH JALAN: /auth/login, /auth/me, /auth/ubah-password
 │     ├─ pengguna.py               # SUDAH JALAN: /pengguna (daftar/tambah/ubah/hapus akun, khusus admin)
 │     ├─ audit.py                  # SUDAH JALAN: GET /audit (riwayat perubahan, khusus admin)
-│     ├─ titik.py                  # SUDAH JALAN: /heatmap (publik), /titik (CRUD + impor CSV)
+│     ├─ titik.py                  # SUDAH JALAN: /heatmap, /titik/sebaran, /berita-kejadian (publik); /titik, /berita (CRUD, impor CSV)
 │     ├─ spasial.py                # SUDAH JALAN: /spasial/titik, /terdekat, /bbox (PostGIS)
 │     └─ laporan.py                # SUDAH JALAN: /import/csv, /export (csv/xlsx)
 ├─ db/
@@ -98,7 +98,7 @@ DELETE /api/pengguna/{id}
 Pengaman: tidak bisa menghapus akun sendiri, dan sistem menolak aksi yang membuat admin habis (`409 AKSI_DITOLAK`).
 
 ## Fitur tambahan
-**Migrasi baru:** jalankan `docker exec gis_kriminalitas_db sh /migrations/run.sh` (menerapkan `004_audit_log.sql`) dan `pip install -r requirements-dev.txt` (paket baru: openpyxl).
+**Migrasi baru:** jalankan `docker exec gis_kriminalitas_db sh /migrations/run.sh` (menerapkan `004` sampai `006`) dan `pip install -r requirements-dev.txt` (paket baru: openpyxl).
 
 - **Ekspor:** `GET /api/export?format=csv|xlsx&tahun=&jenis=&polsek=` (publik). Kolom CSV sama dengan format impor (+ `Total`, `Zona` yang diabaikan saat impor ulang); XLSX berwarna per zona + baris TOTAL. Header `Content-Disposition` sudah di-expose untuk CORS.
 - **Master data (admin):** `POST/PUT/DELETE /api/polsek` dan `/api/jenis`. Polsek yang masih punya kasus dan 18 jenis baku (dipakai impor CSV) tidak bisa dihapus -> `409`. Jenis baru diisi per kasus, bukan lewat impor CSV.
@@ -110,6 +110,13 @@ Pengaman: tidak bisa menghapus akun sendiri, dan sistem menolak aksi yang membua
   - `GET /api/titik` (login) daftar titik persis; `POST /api/titik` `{"lat", "lng", "id_jenis", "tanggal"}` (operator/admin); `PUT /api/titik/{id}` (semua field boleh diubah); `DELETE` (admin). `id_polsek` otomatis dari poligon (null bila di luar wilayah).
   - `POST /api/titik/import` (form-data `file`, `dry_run`): CSV dengan kolom `lat, lng, jenis, tanggal`. `jenis` boleh kode (`CURAT`), nama, atau id; tanggal `YYYY-MM-DD` atau `DD/MM/YYYY`; pemisah `,` atau `;` (dengan `;` koma dibaca desimal). Semua baris valid atau tidak ada yang tersimpan. Maks 5 MB / 20.000 baris.
   - Koordinat divalidasi masuk kotak wilayah (lng 107.2-108.2, lat -7.6 s/d -6.6) untuk menangkap lat/lng tertukar.
+- **Titik berita, sumber data, catatan tahun** (migrasi `006_berita_sumber_catatan.sql`):
+  - Tiap titik punya `sumber_data` (`laporan` / `berita` / `simulasi`) dan `akurasi` (`tepat` / `desa` / `kecamatan`). Titik yang sudah ada saat migrasi dijalankan otomatis ditandai `simulasi`.
+  - Titik boleh dilengkapi **berita** (tautan + judul ringkas + media + tanggal + ringkasan): `POST /api/titik` dengan `berita`, atau `POST /api/titik/{id}/berita`, `PUT/DELETE /api/berita/{id}`. URL hanya `http(s)://`.
+  - `GET /api/berita-kejadian?tahun=&jenis=&polsek=` (publik, GeoJSON) = titik yang punya berita, dipakai lapisan "Kejadian dengan berita" di peta.
+  - `GET /api/titik/sebaran` (publik) = titik per sel grid + rincian jenis. `GET /api/heatmap` dan `/titik/sebaran` memuat `per_sumber` (jumlah titik per sumber) dan menerima filter `sumber=`.
+  - `POST /api/titik/import`: kolom opsional `sumber, akurasi, polsek, judul_berita, sumber_berita, url_berita, tanggal_berita, ringkasan`. Kolom `polsek` menimpa deteksi otomatis dari poligon.
+  - `GET /api/tahun` memuat `catatan` per tahun; admin mengubahnya lewat `PUT/DELETE /api/tahun/{tahun}/catatan`. Migrasi mengisi catatan "simulasi" untuk 2025 dan 2026.
 - **Batas login:** 5 gagal per (IP + username) atau 30 gagal per IP dalam 15 menit -> `429 TERLALU_BANYAK_PERCOBAAN` + header `Retry-After`. Diatur lewat `LOGIN_MAKS_GAGAL`, `LOGIN_MAKS_GAGAL_IP`, `LOGIN_JENDELA_DETIK` di `.env`. Hitungan disimpan di memori (cukup untuk 1 worker). Di belakang reverse proxy, jalankan uvicorn dengan `--proxy-headers` agar IP yang terbaca IP klien asli.
 
 ## Impor CSV & CRUD kasus

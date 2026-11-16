@@ -5,7 +5,7 @@ import { useAuth } from '../auth.jsx';
 // Riwayat Perubahan (khusus admin): siapa mengubah apa dan kapan. Endpoint: GET /api/audit.
 // Password tidak pernah dicatat. Perubahan yang gagal/dibatalkan tidak muncul di sini.
 const BATAS = 20;
-const ENTITAS = ['kasus', 'titik', 'pengguna', 'polsek', 'jenis', 'poligon'];
+const ENTITAS = ['kasus', 'titik', 'berita', 'tahun', 'pengguna', 'polsek', 'jenis', 'poligon'];
 const AKSI = ['tambah', 'ubah', 'hapus', 'impor', 'ubah_password'];
 const WARNA_AKSI = { tambah: 'success', ubah: 'primary', hapus: 'danger', impor: 'info', ubah_password: 'secondary' };
 const KOSONG = { entitas: '', aksi: '', username: '', dari: '', sampai: '' };

@@ -85,7 +85,8 @@ def test_heatmap_agregasi(client, header, bersih_titik):
     assert h["data"][0]["bobot"] == 3 and abs(h["data"][0]["lat"] - -6.70) < 1e-9 and abs(h["data"][0]["lng"] - 108.05) < 1e-9
     assert [d["bobot"] for d in h["data"]] == [3, 1]
     assert client.get("/api/heatmap?tahun=2099&grid=0.0005").json()["total_titik"] == 4
-    assert client.get("/api/heatmap?tahun=2098").json() == {"grid_derajat": 0.002, "total_titik": 0, "maks_bobot": 0, "data": []}
+    assert client.get("/api/heatmap?tahun=2098").json() == {"grid_derajat": 0.002, "total_titik": 0, "maks_bobot": 0,
+                                                             "per_sumber": {"laporan": 0, "berita": 0, "simulasi": 0}, "data": []}
     assert client.get("/api/heatmap?tahun=2099&dari=2099-03-02&sampai=2099-03-02&grid=0.01").json()["total_titik"] == 1
     assert client.get("/api/heatmap?tahun=2099&jenis=2").json()["total_titik"] == 0
     assert "id_titik" not in client.get("/api/heatmap?tahun=2099").text                              # tidak membuka data baris

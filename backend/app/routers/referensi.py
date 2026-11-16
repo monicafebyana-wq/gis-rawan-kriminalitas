@@ -33,10 +33,39 @@ def daftar_jenis(conn: Conn):
     return {"data": rows}
 
 
-@router.get("/tahun", summary="Tahun yang tersedia datanya")
+@router.get("/tahun", summary="Tahun yang tersedia datanya (+ catatan per tahun)")
 def daftar_tahun(conn: Conn):
     tahun = [r["tahun"] for r in conn.execute("SELECT DISTINCT tahun FROM kasus_kejahatan ORDER BY tahun").fetchall()]
-    return {"data": tahun, "terbaru": tahun[-1] if tahun else None}
+    # catatan = peringatan per tahun, mis. "data simulasi". Kunci berupa teks tahun: {"2025": "..."}; hanya tahun yang punya catatan.
+    catatan = {str(r["tahun"]): r["catatan"] for r in conn.execute("SELECT tahun, catatan FROM catatan_tahun ORDER BY tahun").fetchall()}
+    return {"data": tahun, "terbaru": tahun[-1] if tahun else None, "catatan": catatan}
+
+
+class CatatanTahun(BaseModel):
+    catatan: str = Field(min_length=3, max_length=500, description="mis. 'Data simulasi untuk pengembangan'")
+
+
+@router.put("/tahun/{tahun}/catatan", summary="Atur catatan sebuah tahun (khusus admin)")
+def atur_catatan_tahun(tahun: int, body: CatatanTahun, conn: Conn, user: Admin):
+    if not 2000 <= tahun <= 2100:
+        raise validasi_gagal("tahun harus 2000-2100", ["tahun"])
+    row = conn.execute(
+        """INSERT INTO catatan_tahun (tahun, catatan) VALUES (%s, %s)
+           ON CONFLICT (tahun) DO UPDATE SET catatan = EXCLUDED.catatan, diubah_pada = now() RETURNING tahun, catatan""",
+        (tahun, body.catatan.strip())).fetchone()
+    audit.catat(conn, user, "ubah", "tahun", tahun, row)
+    conn.commit()
+    return row
+
+
+@router.delete("/tahun/{tahun}/catatan", status_code=204, summary="Hapus catatan sebuah tahun (khusus admin)")
+def hapus_catatan_tahun(tahun: int, conn: Conn, user: Admin):
+    row = conn.execute("DELETE FROM catatan_tahun WHERE tahun = %s RETURNING tahun, catatan", (tahun,)).fetchone()
+    if row is None:
+        raise tidak_ditemukan(f"Tahun {tahun} tidak punya catatan")
+    audit.catat(conn, user, "hapus", "tahun", tahun, row)
+    conn.commit()
+    return Response(status_code=204)
 
 
 @router.post("/jenis", status_code=201, summary="Tambah jenis kejahatan (khusus admin)")

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 import { api } from '../api.js';
+import CatatanTahun from '../components/CatatanTahun.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip);
 
@@ -45,12 +46,14 @@ export default function DashboardPage() {
   const [stat, setStat] = useState(null);
   const [tren, setTren] = useState([]);
   const [galat, setGalat] = useState('');
+  const [catatan, setCatatan] = useState({}); // peringatan per tahun (mis. data simulasi)
 
   useEffect(() => {
-    Promise.all([api.statistik(), api.tren()])
-      .then(([s, t]) => {
+    Promise.all([api.statistik(), api.tren(), api.tahun()])
+      .then(([s, t, th]) => {
         setStat(s);
         setTren(t.data);
+        setCatatan(th.catatan || {});
       })
       .catch((e) => setGalat(e.message));
   }, []);
@@ -81,6 +84,8 @@ export default function DashboardPage() {
           <Link className="btn btn-outline-secondary" to="/detail-kasus">Lihat detail kasus</Link>
         </div>
       </section>
+
+      <CatatanTahun catatan={catatan} tahun={stat.tahun} className="mb-4" />
 
       <div className="row g-3 mb-3">
         <Kartu judul="Total kasus" nilai={angka(stat.total_kasus)} catatan={`di ${stat.jumlah_polsek} wilayah Polsek`} />

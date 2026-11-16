@@ -29,9 +29,12 @@ Mock server hanya mendukung endpoint lama. Fitur di bawah ini memanggil API baru
 
 - **Peta:** lapisan *Heatmap titik kejadian* (`GET /api/heatmap`, memakai `leaflet.heat`), saklar *Warna zona*,
   alat *Cek lokasi* (klik peta -> `GET /api/spasial/titik`), dan *Unduh rekap* CSV/XLSX (`GET /api/export`).
-- **Titik Kejadian** (`/admin/titik`, operator & admin): tambah/ubah/hapus titik (klik peta kecil untuk koordinat),
+- **Peta (lanjutan):** lapisan *Kejadian dengan berita* (`GET /api/berita-kejadian`; popup berisi tautan berita ke tab baru), peringatan
+  *catatan tahun* (data simulasi) dan peringatan titik simulasi.
+- **Titik Kejadian** (`/admin/titik`, operator & admin): tambah/ubah/hapus titik (klik peta kecil untuk koordinat), sumber + akurasi,
+  berita per titik,
   impor CSV `lat, lng, jenis, tanggal` dengan tombol "Periksa dulu" (dry run).
-- **Master Data** (`/admin/master`, admin): tambah/ubah/hapus Polsek dan jenis kejahatan, unggah poligon GeoJSON.
+- **Master Data** (`/admin/master`, admin): tambah/ubah/hapus Polsek dan jenis kejahatan, unggah poligon GeoJSON, catatan per tahun.
 - **Riwayat Perubahan** (`/admin/audit`, admin): siapa mengubah apa dan kapan.
 - **Kelola Admin** (`/admin/pengguna`, admin): akun dibuat oleh admin (tidak ada pendaftaran mandiri).
 - **Login:** setelah terlalu banyak percobaan gagal server membalas 429; pesannya (dengan lama tunggu) tampil di form.
