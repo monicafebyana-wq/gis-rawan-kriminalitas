@@ -508,19 +508,19 @@ export default function PetaPage() {
         </div>
       </form>
 
-      {status === 'gagal' && (
+            {status === 'gagal' && (
         <div className="alert alert-danger py-2" role="alert">
           Data belum bisa dimuat ({pesanGagal}). Pastikan backend sudah jalan di <code>http://localhost:3000</code>.
         </div>
       )}
-      <CatatanTahun catatan={catatanTahun} tahun={terapkan.tahun} />
+      {data && (
         <div className="small text-secondary mb-2">
           Menampilkan <strong>{data.features.length}</strong> wilayah · total{' '}
           <strong>{totalKasus}</strong> kasus
           {data.features.length === 0 && ' — tidak ada wilayah yang cocok dengan pilihanmu.'}
         </div>
       )}
-
+      
       <div className="row g-3">
         {/* Peta */}
         <div className="col-12 col-lg-9 d-flex flex-column">
