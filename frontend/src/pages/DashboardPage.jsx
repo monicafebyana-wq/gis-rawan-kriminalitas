@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 import { api } from '../api.js';
-import CatatanTahun from '../components/CatatanTahun.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Tooltip);
 
@@ -46,17 +45,24 @@ export default function DashboardPage() {
   const [stat, setStat] = useState(null);
   const [tren, setTren] = useState([]);
   const [galat, setGalat] = useState('');
-  const [catatan, setCatatan] = useState({}); // peringatan per tahun (mis. data simulasi)
+  const [tahunList, setTahunList] = useState([]); // daftar tahun dari /api/tahun
+  const [tahunPilih, setTahunPilih] = useState(''); // kosong = tahun terbaru
 
   useEffect(() => {
-    Promise.all([api.statistik(), api.tren(), api.tahun()])
-      .then(([s, t, th]) => {
-        setStat(s);
-        setTren(t.data);
-        setCatatan(th.catatan || {});
-      })
+    api.tahun()
+      .then((th) => setTahunList(th.data || []))
       .catch((e) => setGalat(e.message));
   }, []);
+
+  useEffect(() => {
+    const params = tahunPilih ? { tahun: tahunPilih } : undefined;
+    Promise.all([api.statistik(params), api.tren(params)])
+      .then(([s, t]) => {
+        setStat(s);
+        setTren(t.data);
+      })
+      .catch((e) => setGalat(e.message));
+  }, [tahunPilih]);
 
   if (galat) {
     return (
@@ -78,14 +84,26 @@ export default function DashboardPage() {
       <section className="hero-kopi mb-4">
         <div className="hero-kicker">Kabupaten Bandung · Data tahun {stat.tahun}</div>
         <h1 className="h2">Dashboard kasus kejahatan {stat.tahun}</h1>
-        <p className="mb-3">Di mana kasus paling banyak, dan jenis apa yang paling sering terjadi.</p>
+        <div className="d-flex align-items-center gap-2 mb-3">
+          <label htmlFor="d-tahun" className="small fw-semibold mb-0">Tahun</label>
+          <select
+            id="d-tahun"
+            className="form-select form-select-sm"
+            style={{ width: 'auto' }}
+            value={tahunPilih || stat.tahun}
+            onChange={(e) => setTahunPilih(e.target.value)}
+          >
+            {tahunList.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+        <p className="mb-3 hero-desc">Di mana kasus paling banyak, dan jenis apa yang paling sering terjadi.</p>
         <div className="d-flex flex-wrap gap-2">
           <Link className="btn btn-primary" to="/peta">Lihat peta kerawanan</Link>
           <Link className="btn btn-outline-secondary" to="/detail-kasus">Lihat detail kasus</Link>
         </div>
       </section>
-
-      <CatatanTahun catatan={catatan} tahun={stat.tahun} className="mb-4" />
 
       <div className="row g-3 mb-3">
         <Kartu judul="Total kasus" nilai={angka(stat.total_kasus)} catatan={`di ${stat.jumlah_polsek} wilayah Polsek`} />

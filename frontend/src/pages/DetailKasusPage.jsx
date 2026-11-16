@@ -61,7 +61,7 @@ function BatangMendatar({ label, nilai, warna }) {
 }
 
 export default function DetailKasusPage() {
-  const { hash } = useLocation();
+  const { hash, pathname } = useLocation();
   const [stat, setStat] = useState(null);
   const [tren, setTren] = useState([]);
   const [baris, setBaris] = useState([]);
@@ -80,9 +80,12 @@ export default function DetailKasusPage() {
   }, []);
 
   // Scroll ke #grafik / #tabel setelah data tampil (dari klik submenu sidebar).
-  useEffect(() => {
-    if (stat && hash) document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
-  }, [stat, hash]);
+useEffect(() => {
+  if (!stat) return;
+  let id = hash ? hash.slice(1) : '';
+  if (!id) id = pathname.endsWith('-tabel') ? 'tabel' : 'grafik';
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}, [stat, hash, pathname]);
 
   // Kasus tertinggi per Polsek (jenis dengan jumlah terbesar) dari data /api/kasus.
   const teratas = useMemo(() => {

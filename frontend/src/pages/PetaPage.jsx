@@ -4,7 +4,6 @@ import L from 'leaflet';
 import 'leaflet.heat'; // harus SESUDAH leaflet: menambah L.heatLayer
 import 'leaflet/dist/leaflet.css';
 import { api } from '../api.js';
-import CatatanTahun from '../components/CatatanTahun.jsx';
 
 // Halaman Peta (/peta): bilah filter di atas, peta besar di kiri, panel Kontrol Layer + Keterangan Zona di kanan.
 // Poligon diwarnai menurut zona; klik poligon untuk melihat rincian jenis kejahatan.
@@ -13,6 +12,7 @@ import CatatanTahun from '../components/CatatanTahun.jsx';
 // (GET /api/spasial/titik) lewat klik atau GPS. Peringatan per tahun (mis. data simulasi) datang dari GET /api/tahun.
 
 const WARNA = { tinggi: '#D96C7B', sedang: '#F5B58A', rendah: '#9ACDB8' };
+const LABEL = { tinggi: 'Sangat Rawan', sedang: 'Cukup Rawan', rendah: 'Tidak Rawan' };
 const TEKS_ZONA = { tinggi: '#4A1B22', sedang: '#5A3414', rendah: '#16463A' };
 const WARNA_TITIK = '#7C3AED'; // titik kejadian: ungu (tidak bentrok dengan warna zona)
 const WARNA_BERITA = '#0E7490'; // kejadian berita: biru kehijauan tua
@@ -514,7 +514,6 @@ export default function PetaPage() {
         </div>
       )}
       <CatatanTahun catatan={catatanTahun} tahun={terapkan.tahun} />
-      {status === 'ok' && data && (
         <div className="small text-secondary mb-2">
           Menampilkan <strong>{data.features.length}</strong> wilayah · total{' '}
           <strong>{totalKasus}</strong> kasus

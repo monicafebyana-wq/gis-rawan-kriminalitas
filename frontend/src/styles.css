@@ -546,3 +546,7 @@ a:hover { color: var(--t-aksen); }
   .btn, .menu-item, .card { transition: none; }
 }
 .popup-berita { min-width: 220px; max-width: 300px; }
+
+.hero-desc {
+  color: #4a5d78 !important;  /* biru-abu gelap, kontras di atas gradasi pastel */
+}
